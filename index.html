@@ -26,7 +26,10 @@
 
   <div class="bk-raster">
     <section class="bk-bau" aria-labelledby="bauTitel">
-      <h2 id="bauTitel">Programm</h2>
+      <div class="tu-sektionkopf">
+        <h2 id="bauTitel">Programm</h2>
+        <button type="button" class="bk-knopf tu-vollbild" data-vollbild="programm" aria-pressed="false"><svg viewBox="0 0 16 16" aria-hidden="true"><path class="gross" d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/><path class="klein" d="M6 2v4H2M14 6h-4V2M10 14v-4h4M2 10h4v4"/></svg><span>Vollbild</span></button>
+      </div>
 
       <div class="tu-kopf">
         <input type="text" class="tu-name" id="name" maxlength="60" aria-label="Name des Programms" placeholder="Name des Programms">
@@ -51,34 +54,41 @@
     </section>
 
     <section class="bk-lauf" aria-labelledby="laufTitel">
-      <h2 id="laufTitel">Turtle-Feld</h2>
-      <label class="bk-nebel-schalter">
-        <input type="checkbox" id="koordinaten"> Koordinatensystem einblenden
-      </label>
-      <div class="tu-feld" id="feld">
-        <div class="tu-leer" id="leer"><span>Drücken Sie «Start».</span></div>
-        <svg class="tu-raster" id="raster" aria-hidden="true"></svg>
-        <div class="tu-maus" id="maus" aria-hidden="true" hidden></div>
+      <div class="tu-sektionkopf">
+        <h2 id="laufTitel">Turtle-Feld</h2>
+        <button type="button" class="bk-knopf tu-vollbild" data-vollbild="feld" aria-pressed="false"><svg viewBox="0 0 16 16" aria-hidden="true"><path class="gross" d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/><path class="klein" d="M6 2v4H2M14 6h-4V2M10 14v-4h4M2 10h4v4"/></svg><span>Vollbild</span></button>
       </div>
-      <p class="bk-feldinfo tu-feldinfo" aria-live="polite"><span id="feldPos"></span><span id="feldZoom"></span></p>
-
-      <div class="bk-steuerung">
-        <button type="button" class="bk-knopf primaer" id="knopfStart" title="Strg/⌘ + Eingabetaste startet neu">Start</button>
-        <button type="button" class="bk-knopf" id="knopfReset">Zurücksetzen</button>
-        <label class="bk-tempo">Tempo
-          <input type="range" id="tempo" min="1" max="7" step="1" value="3" aria-valuetext="mittel">
-          <span class="bk-tempo-skala" aria-hidden="true"><span>langsam</span><span>schnell</span></span>
+      <div class="tu-buehne">
+        <label class="bk-nebel-schalter">
+          <input type="checkbox" id="koordinaten"> Koordinatensystem einblenden
         </label>
+        <div class="tu-feld" id="feld">
+          <div class="tu-leer" id="leer"><span>Drücken Sie «Start».</span></div>
+          <svg class="tu-raster" id="raster" aria-hidden="true"></svg>
+          <div class="tu-maus" id="maus" aria-hidden="true" hidden></div>
+        </div>
+        <p class="bk-feldinfo tu-feldinfo" aria-live="polite"><span id="feldPos"></span><span id="feldZoom"></span></p>
       </div>
-      <p class="bk-schritt" id="zustand" aria-live="polite"></p>
 
-      <div class="bk-meldung fehler" id="meldung" role="alert" hidden></div>
+      <div class="tu-seite">
+        <div class="bk-steuerung">
+          <button type="button" class="bk-knopf primaer" id="knopfStart" title="Strg/⌘ + Eingabetaste startet neu">Start</button>
+          <button type="button" class="bk-knopf" id="knopfReset">Zurücksetzen</button>
+          <label class="bk-tempo">Tempo
+            <input type="range" id="tempo" min="1" max="7" step="1" value="3" aria-valuetext="mittel">
+            <span class="bk-tempo-skala" aria-hidden="true"><span>langsam</span><span>schnell</span></span>
+          </label>
+        </div>
+        <p class="bk-schritt" id="zustand" aria-live="polite"></p>
 
-      <div class="tu-ausgabe-kopf"><h2 id="ausgabeTitel">Ausgabe</h2></div>
-      <pre class="tu-ausgabe" id="ausgabe" aria-labelledby="ausgabeTitel" aria-live="polite"></pre>
-      <div class="tu-eingabe" id="eingabeZeile" hidden>
-        <input type="text" id="eingabe" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Eingabe für input()">
-        <button type="button" class="bk-knopf primaer" id="knopfEingabe">Senden</button>
+        <div class="bk-meldung fehler" id="meldung" role="alert" hidden></div>
+
+        <div class="tu-ausgabe-kopf"><h2 id="ausgabeTitel">Ausgabe</h2></div>
+        <pre class="tu-ausgabe" id="ausgabe" aria-labelledby="ausgabeTitel" aria-live="polite"></pre>
+        <div class="tu-eingabe" id="eingabeZeile" hidden>
+          <input type="text" id="eingabe" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Eingabe für input()">
+          <button type="button" class="bk-knopf primaer" id="knopfEingabe">Senden</button>
+        </div>
       </div>
     </section>
   </div>

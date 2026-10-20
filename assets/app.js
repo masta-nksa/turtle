@@ -602,6 +602,45 @@
     try { localStorage.setItem(SPEICHER_TEMPO, tempoEl.value); } catch (e) { /* ohne Speicher weiter */ }
   });
 
+  /* ---------- Vollbild ------------------------------------------ */
+
+  // «programm»: Editor gross, Feld und Ausgabe schmal daneben; «feld»: Turtle-Feld so gross wie möglich.
+  // Wo der Browser es erlaubt, zusätzlich echtes Vollbild (ohne Browserleiste); sonst nur die Ansicht.
+  var vollbildModus = null;
+  function istVollbild() { return !!(document.fullscreenElement || document.webkitFullscreenElement); }
+  function vollbildSetzen(modus) {
+    vollbildModus = modus;
+    if (modus) document.body.dataset.vollbild = modus; else delete document.body.dataset.vollbild;
+    document.querySelectorAll(".tu-vollbild").forEach(function (k) {
+      var an = k.dataset.vollbild === modus;
+      k.setAttribute("aria-pressed", an ? "true" : "false");
+      k.querySelector("span").textContent = an ? "Verkleinern" : "Vollbild";
+      k.title = an ? "Vollbild beenden (Esc)"
+        : k.dataset.vollbild === "feld" ? "Turtle-Feld im Vollbild" : "Programm im Vollbild, Turtle-Feld klein daneben";
+    });
+    var el = document.documentElement;
+    if (modus && !istVollbild()) {
+      var an = el.requestFullscreen || el.webkitRequestFullscreen;
+      if (an) { try { var r = an.call(el); if (r && r.catch) r.catch(function () { /* nur Ansicht */ }); } catch (e) { /* nur Ansicht */ } }
+    } else if (!modus && istVollbild()) {
+      var aus = document.exitFullscreen || document.webkitExitFullscreen;
+      if (aus) { try { var q = aus.call(document); if (q && q.catch) q.catch(function () {}); } catch (e) { /* schon zu */ } }
+    }
+    setTimeout(function () { editor.refresh(); }, 60);
+  }
+  document.querySelectorAll(".tu-vollbild").forEach(function (k) {
+    k.addEventListener("click", function () { vollbildSetzen(vollbildModus === k.dataset.vollbild ? null : k.dataset.vollbild); });
+  });
+  ["fullscreenchange", "webkitfullscreenchange"].forEach(function (typ) {
+    document.addEventListener(typ, function () {
+      if (!istVollbild() && vollbildModus) vollbildSetzen(null);   // Esc oder Browser hat beendet
+      else setTimeout(function () { editor.refresh(); }, 60);
+    });
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && vollbildModus && !istVollbild() && !document.querySelector("dialog[open]")) vollbildSetzen(null);
+  });
+
   /* ---------- Start --------------------------------------------- */
 
   laden();

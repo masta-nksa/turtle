@@ -41,11 +41,17 @@ vendor/                   Skulpt 1.2.0, CodeMirror 5.65.18, lz-string 1.5.0 (mit
 - **Koordinatensystem einblenden** (Schalter über dem Feld) ergänzt Achsen, Zahlen und ein
   gröberes Gitter, passend zum Zoom, und zeigt die Position der Turtle. Die Wahl merkt sich der
   Browser.
-
 - Über dem Feld zeigt ein kleines Schild beim Zeiger die Koordinaten, z. B. «(120, −40)»; am
   Rand wechselt es auf die andere Seite. Auf dem iPad erscheint es beim Antippen für 1,5 s.
   Umgerechnet wird mit der aktuellen Ansicht, die Werte stimmen also auch beim Herauszoomen
   (gleich wie `onscreenclick`).
+- **Vollbild** (Knopf oben rechts in beiden Bereichen):
+  - beim Programm: Der Editor füllt den Bildschirm, rechts bleiben Turtle-Feld, Start, Tempo und
+    Ausgabe klein sichtbar (auf dem Handy darunter, ohne die Leisten «Neu …» und «Teilen …»);
+  - beim Turtle-Feld: Das Feld wird so gross wie möglich, Steuerung und Ausgabe stehen daneben
+    (im Hochformat darunter).
+  Wo der Browser es erlaubt, blendet der Vollbildmodus auch die Browserleisten aus; Esc oder
+  «Verkleinern» beendet ihn. Wo nicht (z. B. iPhone), füllt die Ansicht trotzdem das Fenster.
 
 ## Beispiele und Schreibweise
 

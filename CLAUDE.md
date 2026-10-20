@@ -37,5 +37,6 @@ Playwright mit Chromium unter `/opt/pw-browsers/chromium`; Testskripte nur im Sc
 Bewährt: Start/Pause/Weiter, Tempo während des Laufs umstellen, Endlosschleife pausieren,
 `input()`, Fehlerzeile, Neuladen (Programm und Tempo bleiben), Teilen-Link in zweitem Kontext,
 kaputter Link, Handy-Breite (kein horizontales Scrollen), Hell/Dunkel, Zoom beim Verlassen des
-Feldes, Koordinatensystem, Zeiger-Koordinaten (gezoomt mit `onscreenclick` vergleichen), Fehlermeldungen (`fehlerhilfe.js` direkt mit node prüfen), offline
+Feldes, Koordinatensystem, Zeiger-Koordinaten (gezoomt mit `onscreenclick` vergleichen), Vollbild Programm/Feld
+(Desktop, iPad quer/hoch, Handy: Feld ganz sichtbar, kein Scrollen der Seite), Fehlermeldungen (`fehlerhilfe.js` direkt mit node prüfen), offline
 (`context.setOffline(true)`: Seite offen ohne Service Worker, und mit Service Worker neu laden).

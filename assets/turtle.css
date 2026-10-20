@@ -133,3 +133,49 @@
   .tu-liste .dt{display:none}
   .tu-editor .CodeMirror{height:50vh}
 }
+
+/* ---------- Kopfzeilen der Bereiche, Vollbild ---------- */
+.tu-sektionkopf{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:36px}
+.tu-buehne,.tu-seite{display:flex;flex-direction:column;gap:12px;min-width:0}
+.tu-vollbild{min-height:36px;padding:4px 10px;font-size:.8rem;display:inline-flex;align-items:center;gap:6px}
+.tu-vollbild svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.tu-vollbild .klein,.tu-vollbild[aria-pressed="true"] .gross{display:none}
+.tu-vollbild[aria-pressed="true"] .klein{display:inline}
+
+body[data-vollbild]{overflow:hidden}
+body[data-vollbild] .bk{max-width:none;height:100vh;height:100dvh;padding:10px;gap:0}
+body[data-vollbild] .bk-kopf-seite{display:none}
+body[data-vollbild] .bk-raster{flex:1;min-height:0;align-items:stretch;gap:10px}
+body[data-vollbild] .bk-lauf{position:static;min-height:0;overflow:auto}
+
+/* Programm gross; Feld, Steuerung und Ausgabe klein daneben */
+body[data-vollbild="programm"] .bk-raster{grid-template-columns:minmax(0,1fr) clamp(240px,26vw,340px)}
+body[data-vollbild="programm"] .bk-bau{min-height:0}
+body[data-vollbild="programm"] .tu-editor{flex:1;min-height:0;position:relative}
+body[data-vollbild="programm"] .tu-editor .CodeMirror{position:absolute;inset:0;height:100%;min-height:0}
+body[data-vollbild="programm"] .bk-lauf{padding:12px;gap:10px}
+body[data-vollbild="programm"] .tu-buehne,body[data-vollbild="programm"] .tu-seite{gap:8px}
+body[data-vollbild="programm"] .bk-tempo{min-width:100%}
+body[data-vollbild="programm"] .tu-ausgabe{min-height:4em;max-height:10em}
+@media (max-width:719px){
+  body[data-vollbild="programm"] .bk-raster{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto}
+  body[data-vollbild="programm"] .bk-lauf{max-height:40vh;max-height:40dvh}
+  body[data-vollbild="programm"] .bk-bau > .bk-leiste,body[data-vollbild="programm"] .bk-bau > .bk-challenge{display:none}
+  body[data-vollbild="programm"] .tu-buehne > *{width:min(100%,24vh);align-self:center}
+}
+
+/* Feld gross; Steuerung und Ausgabe daneben (im Hochformat darunter) */
+body[data-vollbild="feld"] .bk-bau{display:none}
+body[data-vollbild="feld"] .bk-raster{grid-template-columns:minmax(0,1fr)}
+body[data-vollbild="feld"] .bk-lauf{
+  display:grid;grid-template-columns:minmax(0,1fr) clamp(260px,28vw,380px);grid-template-rows:auto minmax(0,1fr);
+  align-content:start;column-gap:20px;
+}
+body[data-vollbild="feld"] .tu-sektionkopf{grid-column:1 / -1}
+body[data-vollbild="feld"] .tu-buehne{align-items:center;min-height:0}
+body[data-vollbild="feld"] .tu-buehne > *{width:min(100%,calc(100vh - 175px));width:min(100%,calc(100dvh - 175px))}
+body[data-vollbild="feld"] .tu-seite{min-height:0;overflow:auto}
+@media (max-aspect-ratio:1/1){
+  body[data-vollbild="feld"] .bk-lauf{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr);row-gap:12px}
+  body[data-vollbild="feld"] .tu-buehne > *{width:min(100%,calc(100vh - 380px));width:min(100%,calc(100dvh - 380px))}
+}

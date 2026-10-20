@@ -68,8 +68,8 @@ Kara, Checks und Turtle liegen unter `masta-nksa.github.io` und teilen sich den
   ankommen; `vendor/` und die Schriften kommen aus dem Speicher.
 - Neue Datei im Repo: in `DATEIEN` in `sw.js` eintragen. Bibliothek in `vendor/` ersetzt:
   `VERSION` in `sw.js` hochzählen.
-- Ohne Netz geht nur der Teilen-Link nicht weiter, den man empfängt: Öffnen klappt nur, wenn
-  die Seite auf diesem Gerät schon einmal geladen wurde.
+- Einen empfangenen Teilen-Link kann man ohne Netz nur öffnen, wenn die Seite auf diesem Gerät
+  schon einmal geladen wurde.
 
 ## Sicherheit
 

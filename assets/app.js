@@ -145,7 +145,7 @@
     speichern(); oeffnen(p.id);
   });
   $("knopfNeu").addEventListener("click", function () {
-    var p = neuesProgramm("Neues Programm", "import turtle\n\nt = turtle.Turtle()\n");
+    var p = neuesProgramm("Neues Programm", BEISPIELE.neu);
     speichern(); oeffnen(p.id);
     editor.focus(); editor.setCursor(editor.lineCount(), 0);
   });
@@ -459,33 +459,41 @@
 
   function zahl(x) { var r = Math.round(x); return (r < 0 ? "−" : "") + Math.abs(r); }
 
+  // Unter der Zeichnung: immer Kacheln zu 50 Einheiten (beim Herauszoomen werden sie enger) und
+  // beim Herauszoomen der Rand des ursprünglichen Feldes. Mit dem Schalter: Achsen, Gitter, Zahlen.
+  var KACHEL = 50;
   function rasterZeichnen() {
     var svg = $("raster");
-    svg.toggleAttribute("hidden", !koordinatenAn);   // SVG kennt die Eigenschaft hidden nicht
     $("feld").classList.toggle("mit-raster", koordinatenAn);
-    if (!koordinatenAn) return;
-    var v = ansichtGroesse, h = v / 2;
-    var schritt = [10, 20, 25, 50, 100, 200, 250, 500].filter(function (s) { return v / s <= 12; })[0] || 500;
-    var fs = v / 36, teile = [];
-    function linie(x1, y1, x2, y2, k) { teile.push('<line class="' + k + '" x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '"/>'); }
-    function text(x, y, t, anker) {
-      teile.push('<text x="' + x + '" y="' + y + '" font-size="' + fs + '" stroke-width="' + fs / 4 + '" text-anchor="' + anker + '">' + t + "</text>");
+    var v = ansichtGroesse, h = v / 2, teile = [], k;
+    function linie(x1, y1, x2, y2, klasse) { teile.push('<line class="' + klasse + '" x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '"/>'); }
+    for (k = Math.ceil(-h / KACHEL) * KACHEL; k <= h; k += KACHEL) {
+      linie(k, -h, k, h, "kachel");
+      linie(-h, -k, h, -k, "kachel");
     }
-    for (var k = Math.ceil(-h / schritt) * schritt; k <= h; k += schritt) {
-      if (k === 0) continue;
-      linie(k, -h, k, h, "gitter");
-      linie(-h, -k, h, -k, "gitter");
+    if (v > FELD + 1) teile.push('<rect class="feldrand" x="' + -FELD / 2 + '" y="' + -FELD / 2 + '" width="' + FELD + '" height="' + FELD + '"/>');
+    if (koordinatenAn) {
+      var schritt = [50, 100, 200, 250, 500].filter(function (s) { return v / s <= 10; })[0] || 500;
+      var fs = v / 36;
+      var text = function (x, y, t, anker) {
+        teile.push('<text x="' + x + '" y="' + y + '" font-size="' + fs + '" stroke-width="' + fs / 4 + '" text-anchor="' + anker + '">' + t + "</text>");
+      };
+      for (k = Math.ceil(-h / schritt) * schritt; k <= h; k += schritt) {
+        if (k === 0) continue;
+        linie(k, -h, k, h, "gitter");
+        linie(-h, -k, h, -k, "gitter");
+      }
+      linie(-h, 0, h, 0, "achse");
+      linie(0, -h, 0, h, "achse");
+      for (k = Math.ceil(-h / schritt) * schritt; k <= h; k += schritt) {
+        if (k === 0 || Math.abs(k) > h - fs) continue;
+        text(k, fs * 1.2, zahl(k), "middle");
+        text(fs * 0.4, -k + fs * 0.35, zahl(k), "start");
+      }
+      text(fs * 0.4, fs * 1.2, "0", "start");
+      text(h - fs * 0.5, -fs * 0.5, "x", "end");
+      text(fs * 0.6, -h + fs * 1.2, "y", "start");
     }
-    linie(-h, 0, h, 0, "achse");
-    linie(0, -h, 0, h, "achse");
-    for (k = Math.ceil(-h / schritt) * schritt; k <= h; k += schritt) {
-      if (k === 0 || Math.abs(k) > h - fs) continue;
-      text(k, fs * 1.2, zahl(k), "middle");
-      text(fs * 0.4, -k + fs * 0.35, zahl(k), "start");
-    }
-    text(fs * 0.4, fs * 1.2, "0", "start");
-    text(h - fs * 0.5, -fs * 0.5, "x", "end");
-    text(fs * 0.6, -h + fs * 1.2, "y", "start");
     svg.setAttribute("viewBox", -h + " " + -h + " " + v + " " + v);
     svg.innerHTML = teile.join("");
   }

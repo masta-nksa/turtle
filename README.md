@@ -36,8 +36,21 @@ vendor/                   Skulpt 1.2.0, CodeMirror 5.65.18, lz-string 1.5.0 (mit
   verfügbare Breite skaliert. Verlässt die Turtle diesen Bereich, zoomt die Ansicht weich heraus,
   bis höchstens −750 … 750; unter dem Feld steht dann «Herausgezoomt: … %». Die Leinwand ist
   dafür 1500 × 1500 gross; `turtle.window_width()` liefert darum 1500.
-- **Koordinatensystem einblenden** (Schalter über dem Feld) legt Achsen und Gitter über die
-  Zeichnung, passend zum Zoom, und zeigt die Position der Turtle. Die Wahl merkt sich der Browser.
+- Unter der Zeichnung liegen immer Kacheln zu 50 Einheiten. Beim Herauszoomen werden sie enger,
+  und ein gestrichelter Rahmen zeigt das ursprüngliche Feld; so ist der Zoom jederzeit sichtbar.
+- **Koordinatensystem einblenden** (Schalter über dem Feld) ergänzt Achsen, Zahlen und ein
+  gröberes Gitter, passend zum Zoom, und zeigt die Position der Turtle. Die Wahl merkt sich der
+  Browser.
+
+## Beispiele und Schreibweise
+
+Alle Beispiele und «Neu» beginnen mit `from turtle import *`: Die Befehle stehen dann ohne
+Objekt davor (`forward(100)` statt `t.forward(100)`), die Hürde mit Objekten fällt am Anfang
+weg. `import turtle` mit `t = turtle.Turtle()` funktioniert weiterhin, und die Fehlerhilfe
+erkennt, welche Schreibweise ein Programm verwendet. Neben den Turtle-Befehlen bietet
+`from turtle import *` auch `bgcolor`, `listen`, `onkey`, `onscreenclick`, `ontimer`,
+`exitonclick` u. a. an (in Skulpt sonst nicht; siehe «Anpassungen an Skulpt»).
+`setup()` und `setworldcoordinates()` fehlen bewusst, weil sie sich nicht mit dem Zoom vertragen.
 
 ## Fehlerhilfe
 
@@ -98,10 +111,12 @@ verändern. Die Seite und das iframe sprechen nur über `postMessage`.
 
 ## Anpassungen an Skulpt
 
-`vendor/` bleibt unverändert. `laufzeit/skulpt.html` ersetzt beim Laden drei Stellen im
+`vendor/` bleibt unverändert. `laufzeit/skulpt.html` ersetzt beim Laden einige Stellen im
 Quelltext des Turtle-Moduls (aus `skulpt-stdlib.js`): Bewegungen und Drehungen fragen den
-Tempo-Faktor ab, jede Bewegung meldet ihr Ziel (für Zoom und Koordinatenanzeige), und Mausklicks
-rechnen Zoom und Skalierung des Feldes heraus. Findet es eine Stelle nicht (etwa nach einem
+Tempo-Faktor ab, jede Bewegung meldet ihr Ziel (für Zoom und Koordinatenanzeige), Mausklicks
+rechnen Zoom und Skalierung des Feldes heraus, und `from turtle import *` bietet zusätzliche
+Bildschirm-Befehle wie `bgcolor` an. Die Laufzeit ist durchsichtig; Kacheln und
+Koordinatensystem zeichnet die Seite darunter. Findet es eine Stelle nicht (etwa nach einem
 Skulpt-Update), meldet es das in der Konsole; das Programm läuft trotzdem, nur ohne die
 entsprechende Funktion.
 

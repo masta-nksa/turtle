@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Turtle-Laufzeit</title>
 <style>
-  html, body { margin: 0; height: 100%; overflow: hidden; background: #fff; }
+  /* durchsichtig: Kacheln und Koordinatensystem der Seite liegen darunter */
+  html, body { margin: 0; height: 100%; overflow: hidden; background: transparent; }
   /* Leinwand 1500 × 1500 (Welt −750 … 750); sichtbar ist ein Ausschnitt um die Mitte,
      per transform auf die Breite des Feldes skaliert */
   #turtle { width: 1500px; height: 1500px; transform-origin: 0 0; outline: none; }
@@ -77,11 +78,18 @@
   // 1. Bewegungen und Drehungen fragen den Tempo-Faktor ab.
   // 2. Mausklicks rechnen Zoom und Skalierung des Feldes heraus.
   // 3. Jede Bewegung meldet ihr Ziel (für Zoom und Koordinatenanzeige).
+  // 4. «from turtle import *» bietet auch bgcolor, listen, onkey … an wie in Python
+  //    (setup und setworldcoordinates bewusst nicht: Sie vertragen sich nicht mit dem Zoom).
   (function anpassen() {
     var pfad = "src/lib/turtle.js", q = Sk.builtinFiles.files[pfad];
     var ersatz = [
       ["function translate(e,a,l,o,d,_,c){", "function translate(e,a,l,o,d,_,c){Sk.TurtleGraphics.bewegt(a+o,l+d);"],
       ["var u,m=e._computed_speed,", "var u,m=Sk.TurtleGraphics.tempo(e._computed_speed),"],
+      ['addModuleMethod(Screen,y,"$title",getScreen),', 'addModuleMethod(Screen,y,"$title",getScreen),' +
+        ["bgcolor", "bgpic", "exitonclick", "listen", "onkey", "onscreenclick", "ontimer", "clearscreen",
+         "resetscreen", "register_shape", "addshape", "getshapes", "turtles"].map(function (n) {
+          return 'addModuleMethod(Screen,y,"$' + n + '",getScreen),';
+        }).join("")],
       ["var o,d=e._computed_speed,", "var o,d=Sk.TurtleGraphics.tempo(e._computed_speed),"],
       ["e=0|r.clientX-l.left,n=0|r.clientY-l.top",
        "e=0|(r.clientX-l.left)*t.spriteLayer().canvas.width/l.width,n=0|(r.clientY-l.top)*t.spriteLayer().canvas.height/l.height"]

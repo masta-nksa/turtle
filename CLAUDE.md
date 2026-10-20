@@ -19,6 +19,8 @@ Fachliche Doku (Aufbau, Bedienung, Speichern, Teilen): siehe `README.md`.
 - `localStorage`-Schlüssel beginnen mit `turtle.`; bei Formatwechsel Version hochzählen.
 - Schülercode läuft nur im Sandbox-iframe (`laufzeit/`), nie in der Seite selbst.
   Geteilte Programme werden nie automatisch gestartet.
+- Beispiele und «Neu» mit `from turtle import *` (Befehle ohne Objekt). Fehlerhilfe muss beide
+  Schreibweisen (`from turtle import *` und `t = turtle.Turtle()`) richtig beraten.
 - Keine Nutzungsstatistik (GoatCounter nur in Kara).
 - Nichts darf beim Tippen oder Ausführen das Layout darüber verschieben (feste Höhen für
   wechselnde Statuszeilen).

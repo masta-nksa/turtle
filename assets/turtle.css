@@ -58,22 +58,17 @@
   position:relative;width:100%;aspect-ratio:1;background:#fff;
   border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
 }
-.tu-feld iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff}
-.tu-leer{
-  position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center;
-  color:#5a6968;font-size:.9rem;
-  background-image:linear-gradient(#e4e9e8 1px,transparent 1px),linear-gradient(90deg,#e4e9e8 1px,transparent 1px);
-  background-size:10% 10%;background-position:center;
-}
+/* Schichten: Kacheln/Koordinaten (unten) · Hinweis · Zeichnung im iframe (durchsichtig, oben) */
+.tu-feld iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent;z-index:2;color-scheme:normal}
+.tu-leer{position:absolute;inset:0;z-index:1;display:grid;place-items:center;padding:24px;text-align:center;color:#5a6968;font-size:.9rem}
 .tu-leer span{background:#fff;padding:4px 10px;border-radius:var(--radius)}
 .tu-leer[hidden]{display:none}
-.mit-raster .tu-leer{background:none}
 .mit-raster .tu-leer span{display:none}
 
-/* Koordinatensystem über der Zeichnung (Welteinheiten, y nach oben) */
-.tu-raster{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2}
-.tu-raster[hidden]{display:none}
-.tu-raster .gitter{stroke:#c9d2d0;stroke-width:1;vector-effect:non-scaling-stroke;opacity:.8}
+.tu-raster{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.tu-raster .kachel{stroke:#e4e9e8;stroke-width:1;vector-effect:non-scaling-stroke}
+.tu-raster .feldrand{fill:none;stroke:#0f6b63;stroke-width:1.5;stroke-dasharray:6 4;vector-effect:non-scaling-stroke;opacity:.55}
+.tu-raster .gitter{stroke:#b9c4c2;stroke-width:1;vector-effect:non-scaling-stroke}
 .tu-raster .achse{stroke:#5a6968;stroke-width:1.5;vector-effect:non-scaling-stroke}
 .tu-raster text{fill:#5a6968;font-family:"IBM Plex Mono",ui-monospace,monospace;paint-order:stroke;stroke:#fff;stroke-linejoin:round}
 .tu-feldinfo{display:flex;justify-content:space-between;gap:12px;height:1.5em;white-space:nowrap;overflow:hidden;font-variant-numeric:tabular-nums}

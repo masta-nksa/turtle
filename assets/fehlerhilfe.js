@@ -120,10 +120,10 @@
       beispiel: { falsch: "for i in range(4)", richtig: "for i in range(4):" } },
     einrueckenFehlt: { was: "Diese Zeile müsste eingerückt sein.",
       tipp: "Nach einer Zeile mit Doppelpunkt rücken die Zeilen, die dazugehören, um 4 Leerzeichen ein (Tab-Taste).",
-      beispiel: { falsch: "for i in range(4):\nt.forward(100)", richtig: "for i in range(4):\n    t.forward(100)" } },
+      beispiel: { falsch: "for i in range(4):\nforward(100)", richtig: "for i in range(4):\n    forward(100)" } },
     einrueckenZuviel: { was: "Diese Zeile ist eingerückt, aber die Zeile davor endet nicht mit einem Doppelpunkt.",
       tipp: "Einrücken nur nach for, while, if, def … mit «:». Sonst beginnt die Zeile ganz links (oder auf derselben Höhe wie die Zeile davor).",
-      beispiel: { falsch: "t.forward(100)\n    t.left(90)", richtig: "t.forward(100)\nt.left(90)" } },
+      beispiel: { falsch: "forward(100)\n    left(90)", richtig: "forward(100)\nleft(90)" } },
     einrueckenUneben: { was: "Die Einrückung passt zu keiner Zeile darüber.",
       tipp: "Zeilen, die zusammengehören, beginnen genau gleich weit rechts. Zählen Sie die Leerzeichen am Anfang.",
       beispiel: { falsch: "if x > 0:\n    print(\"positiv\")\n  else:\n    print(\"nicht positiv\")",
@@ -139,10 +139,10 @@
       beispiel: { falsch: "print(\"Hallo)", richtig: "print(\"Hallo\")" } },
     klammerOffen: { was: "Hier wird eine Klammer geöffnet, aber nicht geschlossen.",
       tipp: "Zählen Sie die Klammern: Zu jeder «(» gehört eine «)». Python merkt das oft erst in der nächsten Zeile.",
-      beispiel: { falsch: "t.forward(100", richtig: "t.forward(100)" } },
+      beispiel: { falsch: "forward(100", richtig: "forward(100)" } },
     klammerZuViel: { was: "Diese Zeile schliesst eine Klammer, die nie geöffnet wurde.",
       tipp: "Zählen Sie die Klammern: Gleich viele «(» wie «)».",
-      beispiel: { falsch: "t.forward(100))", richtig: "t.forward(100)" } },
+      beispiel: { falsch: "forward(100))", richtig: "forward(100)" } },
     klammerFalsch: { was: "Die Klammern passen nicht zusammen.",
       tipp: "Runde «( )», eckige «[ ]» und geschweifte «{ }» Klammern werden mit derselben Art geschlossen.",
       beispiel: { falsch: "farben = [\"red\", \"blue\")", richtig: "farben = [\"red\", \"blue\"]" } },
@@ -165,13 +165,18 @@
     });
     return namen;
   }
+  // Name der Turtle, wenn das Programm mit Objekten arbeitet (t = turtle.Turtle()), sonst null
   function turtleName(zeilen) {
     for (var i = 0; i < zeilen.length; i++) {
-      var m = zeilen[i].match(/^\s*([A-Za-z_]\w*)\s*=\s*turtle\.Turtle\s*\(/);
+      var m = zeilen[i].match(/^\s*([A-Za-z_]\w*)\s*=\s*(?:turtle\.)?Turtle\s*\(/);
       if (m) return m[1];
     }
-    return "t";
+    return null;
   }
+  function sternImport(zeilen) {
+    return zeilen.some(function (z) { return /^\s*from\s+turtle\s+import\s+\*/.test(z); });
+  }
+  function befehl(tn, name) { return (tn ? tn + "." : "") + name; }
   function funktionUm(zeilen, nr) {
     var e = einzug(zeilen[nr - 1] || "");
     for (var i = nr - 2; i >= 0; i--) {
@@ -190,20 +195,30 @@
   /* ---------- Laufzeitfehler ------------------------------------ */
 
   function nameFehler(n, zeilen, nr) {
-    var tn = turtleName(zeilen), namen = definierteNamen(zeilen), zeile = zeilen[nr - 1] || "";
+    var tn = turtleName(zeilen), stern = sternImport(zeilen), namen = definierteNamen(zeilen), zeile = zeilen[nr - 1] || "";
+    var importiert = stern || zeilen.some(function (z) { return /^\s*import\s+turtle\b/.test(z); });
     var r = { was: "Python kennt den Namen «" + n + "» nicht.", tipp: null, beispiel: null };
-    if (n === "turtle") {
-      r.tipp = "Am Anfang des Programms fehlt «import turtle».";
-      r.beispiel = { falsch: "t = turtle.Turtle()", richtig: "import turtle\nt = turtle.Turtle()" };
+    var bekannt = TURTLE_BEFEHLE.indexOf(n) >= 0 || TURTLE_MODUL.indexOf(n) >= 0;
+    if (n === "turtle" && stern) {
+      r.tipp = "Mit «from turtle import *» schreiben Sie die Befehle ohne «turtle.» davor.";
+      r.beispiel = { falsch: "turtle.forward(100)", richtig: "forward(100)" };
+    } else if (!importiert && (n === "turtle" || bekannt)) {
+      r.tipp = "Am Anfang des Programms fehlt «from turtle import *».";
+      r.beispiel = { falsch: n === "turtle" ? "turtle.forward(100)" : n + "(…)", richtig: "from turtle import *\n\nforward(100)" };
     } else if (n === "Turtle" || n === "Screen") {
-      r.tipp = "Schreiben Sie «turtle." + n + "()», also mit «turtle.» davor.";
+      r.tipp = "Schreiben Sie «turtle." + n + "()», also mit «turtle.» davor, oder beginnen Sie mit «from turtle import *».";
       r.beispiel = { falsch: "t = Turtle()", richtig: "t = turtle.Turtle()" };
     } else if (namen[n] && namen[n] > nr) {
       r.tipp = "«" + n + "» bekommt erst in Zeile " + namen[n] + " einen Wert. Python arbeitet das Programm von oben nach unten ab.";
-    } else if (TURTLE_BEFEHLE.indexOf(n) >= 0 || aehnlich(n, TURTLE_BEFEHLE)) {
-      var befehl = TURTLE_BEFEHLE.indexOf(n) >= 0 ? n : aehnlich(n, TURTLE_BEFEHLE);
-      r.tipp = "Turtle-Befehle stehen hinter dem Namen der Turtle: «" + tn + "." + befehl + "(…)».";
-      r.beispiel = { falsch: n + "(100)", richtig: tn + "." + befehl + "(100)" };
+    } else if (bekannt && tn) {
+      r.tipp = "Turtle-Befehle stehen hinter dem Namen der Turtle: «" + tn + "." + n + "(…)».";
+      r.beispiel = { falsch: n + "(100)", richtig: tn + "." + n + "(100)" };
+    } else if (bekannt) {
+      r.tipp = "Mit «import turtle» schreibt man «turtle." + n + "(…)». Einfacher: Beginnen Sie mit «from turtle import *», dann reicht «" + n + "(…)».";
+    } else if (aehnlich(n, TURTLE_MODUL) && !aehnlich(n, Object.keys(namen).concat(EINGEBAUT))) {
+      var v = aehnlich(n, TURTLE_MODUL);
+      r.tipp = v.toLowerCase() === n.toLowerCase() ? "Befehle schreibt man klein: «" + befehl(tn, v) + "»." : "Meinten Sie «" + befehl(tn, v) + "»?";
+      r.beispiel = { falsch: befehl(tn, n) + "(…)", richtig: befehl(tn, v) + "(…)" };
     } else {
       var vorschlag = aehnlich(n, Object.keys(namen).concat(EINGEBAUT));
       if (vorschlag && vorschlag.toLowerCase() === n.toLowerCase())
@@ -226,8 +241,8 @@
     else if (objekt === "Turtle") r.tipp = "Häufige Befehle: forward, back, left, right, penup, pendown, goto, color, circle.";
     else if (objekt === "str") r.tipp = "Hier steht Text, wo ein anderer Wert erwartet wird. Wurde eine Variable mit einem Text überschrieben?";
     if (v) {
-      var tn = turtleName(zeilen);
-      r.beispiel = objekt === "Turtle" ? { falsch: tn + "." + attr + "(…)", richtig: tn + "." + v + "(…)" } : null;
+      var tn = objekt === "Turtle" ? turtleName(zeilen) || "t" : "turtle";
+      r.beispiel = { falsch: tn + "." + attr + "(…)", richtig: tn + "." + v + "(…)" };
     }
     return r;
   }
@@ -241,7 +256,7 @@
     if ((m = n.match(/(\w+)\(\) missing (\d+) required/)))
       return { was: "Dem Befehl «" + m[1] + "» fehlt ein Wert in der Klammer.",
         tipp: "Schreiben Sie den Wert in die Klammer, zum Beispiel «" + m[1] + "(100)».",
-        beispiel: m[1] === "forward" ? { falsch: "t.forward()", richtig: "t.forward(100)" } : null };
+        beispiel: m[1] === "forward" ? { falsch: "forward()", richtig: "forward(100)" } : null };
     if ((m = n.match(/(\w+)\(\) takes .*?(\d+).*?\((\d+) given\)|(\w+)\(\) takes .*?(\d+) positional arguments? but (\d+) (?:were|was) given/)))
       return { was: "Der Befehl «" + (m[1] || m[4]) + "» bekommt zu viele oder zu wenige Werte in der Klammer.",
         tipp: "Werte in der Klammer werden mit Komma getrennt. Prüfen Sie, wie viele der Befehl braucht.", beispiel: null };
@@ -291,7 +306,7 @@
       case "ModuleNotFoundError":
         m = n.match(/No module named '?(\w+)'?/);
         if (m && m[1].toLowerCase() === "turtle" && m[1] !== "turtle")
-          return { was: "Das Modul heisst «turtle», klein geschrieben.", tipp: null, beispiel: { falsch: "import " + m[1], richtig: "import turtle" } };
+          return { was: "Das Modul heisst «turtle», klein geschrieben.", tipp: null, beispiel: { falsch: (zeilen[nr - 1] || "").trim(), richtig: (zeilen[nr - 1] || "").trim().replace(m[1], "turtle") } };
         return { was: "Das Modul «" + (m ? m[1] : "?") + "» gibt es hier nicht.",
           tipp: "Verfügbar sind unter anderem turtle, random, math und time.", beispiel: null };
       case "RecursionError":
@@ -310,7 +325,7 @@
   var MEHR = {
     SyntaxError: "Ein Syntaxfehler heisst: Python versteht die Schreibweise nicht und startet das Programm gar nicht erst. Die markierte Zeile ist ein Hinweis; die Ursache steht oft am Ende der Zeile davor.",
     NameError: "Ein Name ist unbekannt, wenn er nie einen Wert bekommen hat, falsch geschrieben ist oder erst weiter unten festgelegt wird. Python unterscheidet Gross- und Kleinschreibung.",
-    AttributeError: "Mit dem Punkt ruft man einen Befehl eines Objekts auf, etwa t.forward(100). Dieser Befehl existiert für das Objekt nicht, meist wegen eines Tippfehlers.",
+    AttributeError: "Mit dem Punkt ruft man einen Befehl eines Objekts auf, etwa turtle.forward(100) oder t.forward(100). Diesen Befehl gibt es dort nicht, meist wegen eines Tippfehlers.",
     TypeError: "Werte haben einen Typ: ganze Zahl (int), Kommazahl (float), Text (str) … Nicht jeder Befehl und nicht jede Rechnung funktioniert mit jedem Typ.",
     ValueError: "Der Typ stimmt, aber der Inhalt passt nicht, zum Beispiel Text ohne Ziffern für int().",
     ZeroDivisionError: "Teilen durch 0 ist nicht definiert.",

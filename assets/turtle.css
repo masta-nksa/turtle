@@ -266,7 +266,7 @@ body[data-vollbild] .tu-kurs{display:none}
 /* ---------- Lernpfad (bk-…: auch für Kara gedacht) ---------- */
 .bk-pfad{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px 16px 12px;display:flex;flex-direction:column;gap:8px;min-width:0}
 .bk-pfad[hidden]{display:none}
-.bk-einheiten{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.bk-einheiten{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;min-width:0}
 .bk-einheit{position:relative;flex:none;width:38px;height:38px;padding:0;border:0;background:none;cursor:pointer;border-radius:50%}
 .bk-einheit svg{display:block;width:38px;height:38px}
 .bk-einheit .grund{fill:var(--surface);stroke:var(--line);stroke-width:3}
@@ -276,10 +276,11 @@ body[data-vollbild] .tu-kurs{display:none}
 .bk-einheit[aria-current="true"] span{color:var(--ink)}
 .bk-einheit.weiter .grund{stroke-dasharray:3 3}
 .bk-einheit:focus-visible,.bk-station:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-.bk-einheit-titel{margin-left:8px;flex:1 1 220px;min-width:0;display:flex;align-items:baseline;gap:4px 12px;flex-wrap:wrap}
-.bk-einheit-titel b{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.95rem}
-.bk-einheit-titel small{color:var(--ink-soft);font-size:.82rem}
-.bk-stand{margin-left:auto;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.85rem;color:var(--ink-soft);font-variant-numeric:tabular-nums;white-space:nowrap}
+/* immer eine Zeile: Titel ganz, Untertitel bei Platzmangel gekürzt (ganz im title) */
+.bk-einheit-titel{margin-left:8px;flex:1 1 0;min-width:0;display:flex;align-items:baseline;gap:12px;white-space:nowrap;overflow:hidden}
+.bk-einheit-titel b{flex:none;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.95rem}
+.bk-einheit-titel small{min-width:0;overflow:hidden;text-overflow:ellipsis;color:var(--ink-soft);font-size:.82rem}
+.bk-stand{flex:none;margin-left:auto;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.85rem;color:var(--ink-soft);font-variant-numeric:tabular-nums;white-space:nowrap}
 .bk-strecke{overflow-x:auto;padding:2px 2px 2px;scrollbar-width:thin}
 .bk-abschnitte{display:flex;gap:26px;width:max-content;min-width:100%}
 .bk-abschnitt{display:flex;flex-direction:column;gap:4px}

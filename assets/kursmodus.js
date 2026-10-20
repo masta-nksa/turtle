@@ -198,7 +198,7 @@
     });
     var r = aufg.reiheObj, s = stand(r), t = el("div", "bk-einheit-titel");
     t.append(el("b", null, r.titel));
-    if (r.untertitel) t.append(el("small", null, r.untertitel));
+    if (r.untertitel) { t.append(el("small", null, r.untertitel)); t.title = r.titel + ": " + r.untertitel; }
     box.append(t, el("span", "bk-stand", s.n + " / " + s.von + " erledigt"));
   }
 

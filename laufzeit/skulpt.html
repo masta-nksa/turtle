@@ -23,7 +23,7 @@
    Nachrichten von der Seite:  start {code, faktor} · pause · weiter · tempo {faktor} · eingabe {text} · fokus
    Nachrichten an die Seite:   bereit · aus {text} · eingabe {prompt} · fertig {zeichnung, wartet}
                                · fehler {text, art, nachricht, stapel} · ansicht {groesse} · position {x, y, ausserhalb}
-                               · maus {fx, fy, touch} | {weg}
+                               · maus {fx, fy, touch} | {weg} · zeile {zeile}
    zeichnung: Strecken mit gesenktem Stift, Punkte (dot) und Füllflächen, für die Prüfung im Kurs.
    wartet: Das Programm hat Tasten, Klicks oder einen Timer angemeldet und läuft darum weiter (Spiele).
    Zurücksetzen entfernt das ganze iframe; ein eigener Stopp ist darum nicht nötig. */
@@ -182,7 +182,24 @@
   // Jede Unterbrechung des Programms (Zeichnen, input, regelmässiges Abgeben an den Browser)
   // läuft hier durch: Bei Pause wartet das Programm, bis «Weiter» kommt.
   function unterbrechung(susp) {
+    zeileMelden(susp);
     if (pausiert) return new Promise(function (ja) { warten.push(function () { ja(susp); }); });
+  }
+
+  // Laufende Zeile: die innerste Unterbrechung im eigenen Programm (auch in eigenen Befehlen).
+  // Gemeldet wird höchstens einmal pro Bild.
+  var zeileJetzt = 0, zeileGemeldet = true;
+  function zeileMelden(susp) {
+    var z = 0;
+    for (var s = susp, n = 0; s && n < 200; s = s.child, n++) {
+      if (s.$lineno && String(s.$filename || "").indexOf("<stdin>") === 0) z = s.$lineno;
+    }
+    if (!z) return;
+    zeileJetzt = z;
+    if (zeileGemeldet) {
+      zeileGemeldet = false;
+      requestAnimationFrame(function () { zeileGemeldet = true; senden({ typ: "zeile", zeile: zeileJetzt }); });
+    }
   }
 
   // Fehler in Aufrufen durch Tasten, Klicks oder Timer (laufen nach dem Hauptprogramm)

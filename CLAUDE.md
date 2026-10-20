@@ -39,7 +39,8 @@ fuser -k 8123/tcp                    # Server beenden (nicht pkill -f)
 ```
 
 Playwright mit Chromium unter `/opt/pw-browsers/chromium`; Testskripte nur im Scratchpad.
-Bewährt: Start/Pause/Weiter, Tempo während des Laufs umstellen, Endlosschleife pausieren,
+Bewährt: Start/Pause/Weiter, laufende Zeile (folgt eigenen Befehlen, bleibt bei Pause, weg bei
+Turbo, am Ende und nach Änderung), Tempo während des Laufs umstellen, Endlosschleife pausieren,
 `input()`, Fehlerzeile, Neuladen (Programm und Tempo bleiben), Teilen-Link in zweitem Kontext,
 kaputter Link, Kursmodus (Server im Ordner über `turtle/` und `turtle-aufgaben/`, z. B. ein
 Scratchpad-Ordner mit Symlinks auf beide Repos; Lernpfad, Weiter/Zurück, Übersicht, Einklappen,

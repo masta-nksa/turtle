@@ -35,6 +35,10 @@ vendor/                   Skulpt 1.2.0, CodeMirror 5.65.18, lz-string 1.5.0 (mit
 - **Tempo** hat sieben Stufen wie in Kara (sehr langsam … Turbo) und wirkt auch während des
   Zeichnens. Der Regler multipliziert die Geschwindigkeit aus `speed()`; `speed(0)` bleibt
   sofort, «Turbo» zeichnet jeden Schritt ohne Zwischenbilder.
+- Während das Programm läuft, ist im Editor die Zeile markiert, an der es gerade steht (Hintergrund
+  und ▶ bei der Zeilennummer), auch innerhalb eigener Befehle. Sie wechselt bei jedem Turtle-Befehl,
+  bleibt bei «Pause» und `input()` stehen und verschwindet am Ende. Bei «Turbo» und nach einer
+  Änderung am Code während des Laufs gibt es keine Markierung.
 - `input()` fragt in einem Eingabefeld unter der Ausgabe.
 - Das Turtle-Feld zeigt −250 … 250 in beide Richtungen (Ursprung in der Mitte) und wird auf die
   verfügbare Breite skaliert. Verlässt die Turtle diesen Bereich, zoomt die Ansicht weich heraus,
@@ -315,6 +319,30 @@ Mit einem Kurs: Server im Ordner über `turtle/` und `turtle-aufgaben/` starten 
 
 Settings → Pages → Source: «Deploy from a branch», Branch `main`, Ordner `/ (root)`.
 Die leere Datei `.nojekyll` im Root muss bestehen bleiben.
+
+## Geplant
+
+Besprochen, aber noch nicht umgesetzt:
+
+- **Befehlsübersicht mit Suche:** Knopf «Befehle» beim Programm, Seitenleiste mit Gruppen (Bewegen,
+  Drehen, Stift, Farben …, Python), Suche auch über deutsche Wörter, je Eintrag Aufruf, Satz und
+  Beispiel, «Einfügen» an der Cursorstelle (offen: ob «Einfügen» und die Gruppe Python dazugehören).
+  Daten aus `assets/befehle.js`; Sprung aus der Fehlerhilfe («Meinten Sie «forward»?») zum Eintrag.
+- **Einzelschritt** wie in Kara, aufbauend auf der Markierung der laufenden Zeile.
+- **Antworten zu den Fragen:** Antwortfelder zu allen Fragen, «Antworten kopieren» (z. B. für
+  OneNote) und als Kommentar in der heruntergeladenen `.py`-Datei; freiwillige Erklärung, die erst
+  nach der eigenen Antwort erscheint.
+- **«Tutor fragen»:** sokratischer Copilot-Agent in Microsoft 365 der Schule (Edu-Konten, kein
+  API-Schlüssel im Tool). Das Tool kopiert Aufgabe, Antwort, Programm und Fehlermeldung in die
+  Zwischenablage und öffnet den Agenten. Vorher mit der Informatik der Schule klären, ob
+  Schülerinnen und Schüler Agenten nutzen dürfen und ob Kosten anfallen.
+- **Lernkontrollen und Zusatzbedingungen:** `bedingungen` auswerten (z. B. höchstens n Zeilen,
+  verwendet `for`/`def`), angezeigt als Checkliste; Prüfung von `print`-Ausgaben.
+- **Korrekturansicht** für Lehrpersonen (`?werkzeug=korrektur`): abgegebene `.py`-Dateien laden,
+  automatisch gegen das Zielbild prüfen, Tabelle mit Vorschau; Name und Aufgabe als Kopf in der
+  heruntergeladenen Datei.
+- **Weiterführende Reihen** im Beispielkurs: Objekte, Rekursion, Spiele (Pong); dafür in der Laufzeit
+  `shapesize`/`turtlesize`, `onkeypress` und `onkeyrelease`.
 
 ## Lizenzen
 

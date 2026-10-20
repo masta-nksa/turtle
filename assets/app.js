@@ -366,6 +366,36 @@
     if (fehlerZeile !== null) { editor.removeLineClass(fehlerZeile, "background", "tu-fehlerzeile"); fehlerZeile = null; }
   }
 
+  // Laufende Zeile markieren, solange das Programm läuft (nicht bei Turbo und nicht, wenn der
+  // Code seit dem Start geändert wurde). Jede Markierung bleibt mindestens 120 ms stehen.
+  var aktivZeile = null, aktivZeit = 0, aktivWartet = null, codeGeaendert = false;
+  // aktivZeile ist der Zeilen-Handle von CodeMirror: Er wandert mit, wenn darüber Zeilen dazukommen
+  function aktivSetzen(z) {
+    var h = z === null ? null : editor.getLineHandle(z);
+    if (aktivZeile === h) return;
+    if (aktivZeile) {
+      editor.removeLineClass(aktivZeile, "background", "tu-aktivzeile");
+      editor.removeLineClass(aktivZeile, "gutter", "tu-aktivrand");
+    }
+    aktivZeile = h;
+    if (h) {
+      editor.addLineClass(h, "background", "tu-aktivzeile");
+      editor.addLineClass(h, "gutter", "tu-aktivrand");
+    }
+  }
+  function aktivZeigen(zeile) {
+    if (faktor() === Infinity || codeGeaendert) { aktivWeg(); return; }
+    var z = zeile - 1;
+    if (!(z >= 0 && z < editor.lineCount())) return;
+    var jetzt = performance.now(), rest = 120 - (jetzt - aktivZeit);
+    clearTimeout(aktivWartet);
+    if (rest > 0) { aktivWartet = setTimeout(function () { aktivZeigen(zeile); }, rest); return; }
+    aktivZeit = jetzt;
+    aktivSetzen(z);
+  }
+  function aktivWeg() { clearTimeout(aktivWartet); aktivSetzen(null); }
+  editor.on("change", function () { if (rahmen) { codeGeaendert = true; aktivWeg(); } });
+
   function zuruecksetzen() {
     if (rahmen) { rahmen.remove(); rahmen = null; }
     $("leer").hidden = false;
@@ -373,6 +403,7 @@
     $("meldung").hidden = true;
     $("eingabeZeile").hidden = true;
     fehlerzeileWeg();
+    aktivWeg();
     ansichtZuruecksetzen();
     spielt = false;
     setzeZustand("bereit");
@@ -420,6 +451,7 @@
     $("feld").append(rahmen);
     $("leer").hidden = true;
     setzeZustand("laeuft");
+    codeGeaendert = false;
     if (hooks.start) hooks.start();
     var dieser = rahmen;
     laufzeitLaden().then(function (html) {
@@ -626,15 +658,17 @@
       $("eingabe").value = "";
       $("eingabe").focus();
     }
+    else if (m.typ === "zeile") { if (zustand !== "fertig" && zustand !== "fehler") aktivZeigen(Number(m.zeile)); }
     else if (m.typ === "fertig") {
       spielt = !!m.wartet;
+      if (!spielt) aktivWeg();
       if (zustand !== "pause") setzeZustand(spielt ? "spiel" : "fertig");
       if (spielt) fokusInsFeld();
       var z = m.zeichnung && typeof m.zeichnung === "object" ? m.zeichnung : null;
       if (z) zielWerkzeugZeigen(z);
       if (hooks.fertig) hooks.fertig(z, spielt, rahmen.dataset.code);
     }
-    else if (m.typ === "fehler") { spielt = false; setzeZustand("fehler"); fehlerZeigen(m); if (hooks.fehler) hooks.fehler(); }
+    else if (m.typ === "fehler") { spielt = false; aktivWeg(); setzeZustand("fehler"); fehlerZeigen(m); if (hooks.fehler) hooks.fehler(); }
     else if (m.typ === "ansicht" && m.groesse > 0) { ansichtGroesse = Number(m.groesse); rasterZeichnen(); feldInfoZeigen(); }
     else if (m.typ === "maus") { if (m.weg) mausWeg(); else mausZeigen(Number(m.fx), Number(m.fy), !!m.touch); }
     else if (m.typ === "position") {

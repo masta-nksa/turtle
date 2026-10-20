@@ -390,3 +390,11 @@ body[data-vollbild] .tu-kurs{display:none}
 .tu-kurzhilfe code{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.92em;font-weight:600;color:var(--accent)}
 .tu-kurzhilfe.leer{opacity:.7}
 
+
+/* ---------- Laufende Zeile ---------- */
+:root{--aktivzeile:rgba(15,107,99,.13)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--aktivzeile:rgba(95,211,196,.16)}}
+:root[data-theme="dark"]{--aktivzeile:rgba(95,211,196,.16)}
+.tu-aktivzeile{background:var(--aktivzeile)}
+.tu-aktivrand .CodeMirror-linenumber{color:var(--accent);font-weight:600}
+.tu-aktivrand .CodeMirror-linenumber::before{content:"▶";position:absolute;left:2px;font-size:.7em;line-height:inherit}

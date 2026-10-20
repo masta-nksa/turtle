@@ -19,6 +19,7 @@ assets/turtle.css         Editor, Turtle-Feld, Ausgabe, Programmliste
 assets/app.js             Speichern, Teilen, Ablauf (Start/Pause/Weiter, Tempo)
 assets/beispiele.js       Startprogramm und Beispiele
 assets/fehlerhilfe.js     erklärt Python-Fehler auf Deutsch (ohne DOM, auch mit node testbar)
+assets/befehle.js         Kurzbeschreibung der Befehle für die Kurzhilfe (ohne DOM)
 assets/kurs.js            Kursadresse auflösen, kurs.json prüfen, Texte zerlegen (ohne DOM)
 assets/pruefung.js        Zeichnung mit dem Zielbild vergleichen, Zielbild-Werkzeug (ohne DOM)
 assets/kursmodus.js       Kursmodus: Reihen, Aufgaben, Fortschritt (nur mit ?kurs=…)
@@ -55,6 +56,14 @@ vendor/                   Skulpt 1.2.0, CodeMirror 5.65.18, lz-string 1.5.0 (mit
     (im Hochformat darunter).
   Wo der Browser es erlaubt, blendet der Vollbildmodus auch die Browserleisten aus; Esc oder
   «Verkleinern» beendet ihn. Wo nicht (z. B. iPhone), füllt die Ansicht trotzdem das Fenster.
+
+## Kurzhilfe
+
+Unter dem Editor steht in einer Zeile mit fester Höhe, was der Befehl unter dem Cursor macht,
+z. B. «`circle(radius, winkel, ecken)` Kreis mit der Mitte links der Turtle …». Sie erscheint auch,
+während man die Argumente in den Klammern tippt; Texte und Kommentare zählen nicht. Die Liste
+steht in `assets/befehle.js` (Turtle-Befehle, die im Tool gehen, dazu Python-Befehle und
+Schlüsselwörter wie `for` und `def`; ohne DOM, mit node testbar).
 
 ## Spiele (Tasten, Klicks, Timer)
 

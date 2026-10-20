@@ -126,6 +126,23 @@
     gespeichertZeigen(speichern(), p.geaendert);
   }
   editor.on("change", aenderung);
+
+  // Kurzhilfe: steht der Cursor auf einem Befehl (oder in seinen Klammern), eine Zeile dazu.
+  // Die Zeile hat eine feste Höhe; ohne Treffer bleibt sie leer bzw. zeigt einen Hinweis.
+  var kurzhilfeEl = $("kurzhilfe"), kurzhilfeAlt;
+  function kurzhilfe() {
+    var c = editor.getCursor(), e = window.TurtleBefehle ? window.TurtleBefehle.beiCursor(editor.getLine(c.line) || "", c.ch) : null;
+    if (e === kurzhilfeAlt) return;
+    kurzhilfeAlt = e;
+    kurzhilfeEl.textContent = "";
+    kurzhilfeEl.classList.toggle("leer", !e);
+    if (!e) { kurzhilfeEl.textContent = "Kurzhilfe: Setzen Sie den Cursor auf einen Befehl."; return; }
+    var code = document.createElement("code");
+    code.textContent = e.aufruf;
+    kurzhilfeEl.append(code, " " + e.text);
+    kurzhilfeEl.title = e.aufruf + " – " + e.text;
+  }
+  editor.on("cursorActivity", kurzhilfe);
   $("name").addEventListener("input", aenderung);
   window.addEventListener("pagehide", function () { if (speicherTimer) sofortSpeichern(); });
   document.addEventListener("visibilitychange", function () { if (document.hidden && speicherTimer) sofortSpeichern(); });
@@ -747,6 +764,7 @@
     farbeText: farbeText
   };
   if (!KURS) freiStarten();
+  kurzhilfe();
   try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) { /* freiwillig */ }
   laufzeitLaden();   // schon jetzt, damit «Start» auch nach Verbindungsverlust geht
 

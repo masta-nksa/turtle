@@ -498,6 +498,37 @@
     svg.innerHTML = teile.join("");
   }
 
+  // Koordinaten beim Zeiger: fx, fy sind Anteile der Feldbreite (0 … 1), umgerechnet mit der
+  // aktuellen Ansicht. So stimmen sie auch beim Herauszoomen.
+  var mausEl = $("maus"), mausTimer = null;
+  function mausZeigen(fx, fy, beruehrung) {
+    if (!(fx >= 0 && fx <= 1 && fy >= 0 && fy <= 1)) { mausWeg(); return; }
+    var x = (fx - 0.5) * ansichtGroesse, y = (0.5 - fy) * ansichtGroesse;
+    mausEl.textContent = "(" + zahl(x) + ", " + zahl(y) + ")";
+    mausEl.hidden = false;
+    var b = $("feld").clientWidth, h = $("feld").clientHeight, px = fx * b, py = fy * h;
+    var w = mausEl.offsetWidth, hh = mausEl.offsetHeight, abstand = beruehrung ? 28 : 14;
+    // rechts unterhalb des Zeigers; am Rand auf die andere Seite (beim Finger darüber)
+    var links = px + abstand + w > b ? px - abstand - w : px + abstand;
+    var oben = beruehrung || py + abstand + hh > h ? py - abstand - hh : py + abstand;
+    mausEl.style.transform = "translate(" + Math.max(2, links) + "px," + Math.max(2, oben) + "px)";
+    clearTimeout(mausTimer);
+    if (beruehrung) mausTimer = setTimeout(mausWeg, 1500);
+  }
+  function mausWeg() { mausEl.hidden = true; }
+  function feldZeiger(e) {
+    var r = $("feld").getBoundingClientRect();
+    mausZeigen((e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height, e.pointerType === "touch");
+  }
+  // ohne laufendes Programm (oder neben dem iframe) kommen die Ereignisse direkt hier an
+  $("feld").addEventListener("pointermove", feldZeiger);
+  $("feld").addEventListener("pointerdown", feldZeiger);
+  $("feld").addEventListener("pointerleave", function (e) { if (e.pointerType !== "touch") mausWeg(); });
+  // Verlässt der Zeiger das iframe, meldet das nicht jeder Browser: Bewegung ausserhalb des Feldes blendet aus
+  document.addEventListener("pointermove", function (e) {
+    if (!mausEl.hidden && e.pointerType !== "touch" && !$("feld").contains(e.target)) mausWeg();
+  });
+
   // Eine Zeile mit fester Höhe: links die Position, rechts der Zoom (nichts verschiebt sich)
   function feldInfoZeigen() {
     $("feldPos").textContent = koordinatenAn && turtlePos
@@ -538,6 +569,7 @@
     else if (m.typ === "fertig") setzeZustand("fertig");
     else if (m.typ === "fehler") { setzeZustand("fehler"); fehlerZeigen(m); }
     else if (m.typ === "ansicht" && m.groesse > 0) { ansichtGroesse = Number(m.groesse); rasterZeichnen(); feldInfoZeigen(); }
+    else if (m.typ === "maus") { if (m.weg) mausWeg(); else mausZeigen(Number(m.fx), Number(m.fy), !!m.touch); }
     else if (m.typ === "position") {
       turtlePos = { x: Number(m.x) || 0, y: Number(m.y) || 0, ausserhalb: !!m.ausserhalb };
       feldInfoZeigen();

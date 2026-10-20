@@ -23,6 +23,7 @@
    Nachrichten von der Seite:  start {code, faktor} · pause · weiter · tempo {faktor} · eingabe {text}
    Nachrichten an die Seite:   bereit · aus {text} · eingabe {prompt} · fertig
                                · fehler {text, art, nachricht, stapel} · ansicht {groesse} · position {x, y, ausserhalb}
+                               · maus {fx, fy, touch} | {weg}
    Zurücksetzen entfernt das ganze iframe; ein eigener Stopp ist darum nicht nötig. */
 (function () {
   "use strict";
@@ -52,6 +53,16 @@
     if (!zoomLaeuft) { zoomLaeuft = true; requestAnimationFrame(zoomSchritt); }
   }
   window.addEventListener("resize", ansichtAnwenden);
+
+  // Zeiger über dem Feld: Anteil der Breite/Höhe an die Seite (sie rechnet mit der Ansicht um)
+  function zeiger(e) {
+    senden({ typ: "maus", fx: e.clientX / window.innerWidth, fy: e.clientY / window.innerHeight, touch: e.pointerType === "touch" });
+  }
+  document.addEventListener("pointermove", zeiger);
+  document.addEventListener("pointerdown", zeiger);
+  document.documentElement.addEventListener("pointerleave", function (e) {
+    if (e.pointerType !== "touch") senden({ typ: "maus", weg: true });   // beim Finger blendet die Seite selbst aus
+  });
   ansichtAnwenden();
 
   // Jede Bewegung meldet ihr Ziel: Ansicht anpassen, Position an die Seite (einmal pro Bild)

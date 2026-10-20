@@ -42,6 +42,11 @@ vendor/                   Skulpt 1.2.0, CodeMirror 5.65.18, lz-string 1.5.0 (mit
   gröberes Gitter, passend zum Zoom, und zeigt die Position der Turtle. Die Wahl merkt sich der
   Browser.
 
+- Über dem Feld zeigt ein kleines Schild beim Zeiger die Koordinaten, z. B. «(120, −40)»; am
+  Rand wechselt es auf die andere Seite. Auf dem iPad erscheint es beim Antippen für 1,5 s.
+  Umgerechnet wird mit der aktuellen Ansicht, die Werte stimmen also auch beim Herauszoomen
+  (gleich wie `onscreenclick`).
+
 ## Beispiele und Schreibweise
 
 Alle Beispiele und «Neu» beginnen mit `from turtle import *`: Die Befehle stehen dann ohne

@@ -6,7 +6,8 @@ damit sich die beiden Projekte später auf einer Seite zusammenführen lassen.
 
 Python läuft mit [Skulpt](https://skulpt.org) (Python 3 im Browser, mit eingebautem
 Turtle-Modul). Alle Bibliotheken liegen in `vendor/`; die Seite braucht keinen Server und
-kein CDN (einzig die Schriften kommen wie in Kara von Google Fonts).
+kein CDN (einzig die Schriften kommen wie in Kara von Google Fonts). Nach dem ersten Besuch
+funktioniert sie auch ohne Internet (siehe «Offline»).
 
 ## Aufbau
 
@@ -18,6 +19,7 @@ assets/turtle.css         Editor, Turtle-Feld, Ausgabe, Programmliste
 assets/app.js             Speichern, Teilen, Ablauf (Start/Pause/Weiter, Tempo)
 assets/beispiele.js       Startprogramm und Beispiele
 laufzeit/skulpt.html      führt das Programm aus (Sandbox-iframe)
+sw.js                     Service Worker für den Offline-Betrieb
 vendor/                   Skulpt 1.2.0, CodeMirror 5.65.18, lz-string 1.5.0 (mit Lizenzen)
 ```
 
@@ -53,6 +55,21 @@ löschen, die länger nicht besucht wurden; wichtige Programme darum herunterlad
 
 Kara, Checks und Turtle liegen unter `masta-nksa.github.io` und teilen sich den
 `localStorage`; die Präfixe `kara.` und `turtle.` halten sie auseinander.
+
+## Offline
+
+- Ist die Seite offen, braucht «Start» kein Netz mehr: `app.js` lädt die Laufzeit
+  (`laufzeit/skulpt.html` mit Skulpt) gleich beim Öffnen einmal und setzt sie bei jedem Start
+  als `srcdoc` ins iframe, mit den Skripten eingebettet. Ein Sandbox-iframe ohne eigenen
+  Ursprung würde den Service Worker nicht erreichen; darum dieser Umweg.
+- `sw.js` legt beim ersten Besuch alle Dateien im Browser ab. Danach lässt sich die Seite auch
+  ohne Internet öffnen und neu laden (auch auf dem iPad, auch als Lesezeichen auf dem
+  Home-Bildschirm). Eigene Dateien kommen zuerst aus dem Netz, damit Änderungen sofort
+  ankommen; `vendor/` und die Schriften kommen aus dem Speicher.
+- Neue Datei im Repo: in `DATEIEN` in `sw.js` eintragen. Bibliothek in `vendor/` ersetzt:
+  `VERSION` in `sw.js` hochzählen.
+- Ohne Netz geht nur der Teilen-Link nicht weiter, den man empfängt: Öffnen klappt nur, wenn
+  die Seite auf diesem Gerät schon einmal geladen wurde.
 
 ## Sicherheit
 

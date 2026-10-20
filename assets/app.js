@@ -326,6 +326,32 @@
     setzeZustand("bereit");
   }
 
+  // Die Laufzeit wird einmal geladen und als srcdoc (mit eingebetteten Skripten) für jeden Start
+  // wiederverwendet. So läuft «Start» auch ohne Netz weiter, sobald die Seite einmal offen war.
+  // (Ein Sandbox-iframe ohne eigenen Ursprung erreicht den Service Worker nicht.)
+  var laufzeitText = null;
+  function laufzeitLaden() {
+    if (laufzeitText) return laufzeitText;
+    function holen(pfad) {
+      return fetch(pfad).then(function (r) {
+        if (!r.ok) throw new Error(pfad + ": " + r.status);
+        return r.text();
+      });
+    }
+    laufzeitText = Promise.all([
+      holen("laufzeit/skulpt.html"), holen("vendor/skulpt.min.js"), holen("vendor/skulpt-stdlib.js")
+    ]).then(function (t) {
+      function einbetten(js) { return "<script>" + js.replace(/<\/script/gi, "<\\/script") + "<\/script>"; }
+      var html = t[0]
+        .replace('<script src="../vendor/skulpt.min.js"></script>', function () { return einbetten(t[1]); })
+        .replace('<script src="../vendor/skulpt-stdlib.js"></script>', function () { return einbetten(t[2]); });
+      if (html.indexOf('src="../vendor/') >= 0) throw new Error("Laufzeit: Skript-Verweise nicht gefunden");
+      return html;
+    });
+    laufzeitText.catch(function () { laufzeitText = null; });   // beim nächsten Start neu versuchen
+    return laufzeitText;
+  }
+
   function neuStarten() {
     if (speicherTimer) sofortSpeichern();
     zuruecksetzen();
@@ -334,11 +360,22 @@
     rahmen.title = "Turtle-Feld";
     // Ohne allow-same-origin: kein Zugriff auf localStorage dieser Seite
     rahmen.setAttribute("sandbox", "allow-scripts");
-    rahmen.src = "laufzeit/skulpt.html";
     rahmen.dataset.code = code;
     $("feld").append(rahmen);
     $("leer").hidden = true;
     setzeZustand("laeuft");
+    var dieser = rahmen;
+    laufzeitLaden().then(function (html) {
+      if (rahmen === dieser) dieser.srcdoc = html;
+    }, function () {
+      if (rahmen !== dieser) return;
+      setzeZustand("fehler");
+      var m = $("meldung"); m.textContent = "";
+      var kopf = document.createElement("strong"); kopf.textContent = "Keine Verbindung";
+      var p = document.createElement("p");
+      p.textContent = "Python konnte nicht geladen werden. Öffnen Sie die Seite einmal mit Internet; danach funktioniert sie auch offline.";
+      m.append(kopf, p); m.hidden = false;
+    });
   }
 
   $("knopfStart").addEventListener("click", function () {
@@ -430,4 +467,10 @@
   oeffnen(db.aktuell);
   linkLesen();
   try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) { /* freiwillig */ }
+  laufzeitLaden();   // schon jetzt, damit «Start» auch nach Verbindungsverlust geht
+
+  // Offline: Der Service Worker legt alle Dateien im Browser ab (nur über https oder localhost).
+  if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+    navigator.serviceWorker.register("sw.js").catch(function () { /* dann eben nur online */ });
+  }
 })();

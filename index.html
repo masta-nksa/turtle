@@ -18,11 +18,46 @@
   <header class="bk-kopf-seite">
     <span class="eyebrow">Turtle · Python programmieren</span>
     <h1>Turtle</h1>
-    <p class="lead">Schreiben Sie ein Python-Programm und lassen Sie die Turtle zeichnen. Läuft direkt im Browser, ohne Installation und ohne Anmeldung; Ihre Programme merkt sich nur dieser Browser.</p>
+    <p class="lead" id="lead">Schreiben Sie ein Python-Programm und lassen Sie die Turtle zeichnen. Läuft direkt im Browser, ohne Installation und ohne Anmeldung; Ihre Programme merkt sich nur dieser Browser.</p>
+    <p class="tu-kursleiste" id="kursLeiste" hidden>
+      <button type="button" class="bk-knopf" id="knopfKonzepte">Konzepte</button>
+      <a class="tu-frei" id="linkFrei" href="./">Ohne Kurs programmieren →</a>
+    </p>
     <div class="pixelrule" id="pixelrule" aria-hidden="true"></div>
   </header>
 
   <noscript><p class="oops">Diese Seite braucht JavaScript.</p></noscript>
+
+  <div class="tu-kurs" id="kurs" hidden>
+    <p class="bk-meldung fehler" id="kursFehler" role="alert" hidden></p>
+    <div class="bk-reihen" id="reihen" role="group" aria-label="Reihe"></div>
+    <nav class="bk-aufgaben" aria-label="Aufgaben"><ol id="aufgabenListe"></ol></nav>
+
+    <section class="bk-aufgabe" id="aufgabe" aria-labelledby="aufgabeTitel" hidden>
+      <h2 id="aufgabeTitel"></h2>
+      <p class="tu-etiketten" id="etiketten" hidden></p>
+      <p class="tu-vorhersage" id="vorhersage" hidden>Überlegen Sie zuerst, was dieses Programm zeichnet. Drücken Sie erst dann «Start».</p>
+      <div class="tu-text" id="aufgabeText"></div>
+      <ol class="tu-fragen" id="fragen" hidden></ol>
+      <ul class="tu-checkliste" id="checkliste" hidden></ul>
+      <img class="tu-bild" id="aufgabeBild" alt="" hidden>
+      <p class="tu-weiter" id="weiterHinweis" hidden></p>
+      <details class="bk-hinweis" id="hinweisBox">
+        <summary>Hinweis anzeigen</summary>
+        <div id="hinweisListe"></div>
+        <button type="button" class="bk-knopf bk-tipp" id="knopfTipp">Noch ein Tipp</button>
+      </details>
+      <div class="tu-erledigt">
+        <label class="bk-nebel-schalter"><input type="checkbox" id="selbst"> Als erledigt markieren</label>
+        <span class="tu-status" id="aufgabeStatus" role="status" aria-live="polite"></span>
+      </div>
+      <div class="bk-challenge">
+        <button type="button" class="bk-knopf" id="aufgabeTeilen">Link zum Teilen kopieren</button>
+        <input type="text" class="bk-ch-link" id="aufgabeLink" readonly hidden aria-label="Link zur Aufgabe">
+        <p class="bk-ch-meldung" id="aufgabeMeldung" role="status" aria-live="polite" hidden></p>
+      </div>
+    </section>
+  </div>
 
   <div class="bk-raster">
     <section class="bk-bau" aria-labelledby="bauTitel">
@@ -38,6 +73,7 @@
       <div class="bk-leiste">
         <span class="tu-gespeichert" id="gespeichert" role="status" aria-live="polite"></span>
         <span class="bk-leiste-knoepfe">
+          <button type="button" class="bk-knopf" id="knopfStartcode" hidden>Zurück zum Startcode</button>
           <button type="button" class="bk-knopf" id="knopfNeu">Neu</button>
           <button type="button" class="bk-knopf" id="knopfProgramme">Meine Programme</button>
         </span>
@@ -62,6 +98,9 @@
         <label class="bk-nebel-schalter">
           <input type="checkbox" id="koordinaten"> Koordinatensystem einblenden
         </label>
+        <label class="bk-nebel-schalter" id="vorlageSchalter" hidden>
+          <input type="checkbox" id="vorlage"> Zielbild als Vorlage einblenden
+        </label>
         <div class="tu-feld" id="feld">
           <div class="tu-leer" id="leer"><span>Drücken Sie «Start».</span></div>
           <svg class="tu-raster" id="raster" aria-hidden="true"></svg>
@@ -82,6 +121,14 @@
         <p class="bk-schritt" id="zustand" aria-live="polite"></p>
 
         <div class="bk-meldung fehler" id="meldung" role="alert" hidden></div>
+        <div class="bk-meldung" id="pruefung" role="status" aria-live="polite" hidden></div>
+        <div class="bk-meldung" id="zielWerkzeug" hidden>
+          <strong>Zielbild-Werkzeug</strong>
+          <p>Nach jedem Lauf steht hier die Zeichnung als «ziel» für kurs.json.</p>
+          <label class="bk-nebel-schalter"><input type="checkbox" id="zielFarbe"> Farben übernehmen</label>
+          <textarea class="tu-zieltext" id="zielText" readonly rows="6" aria-label="Zielbild als JSON"></textarea>
+          <button type="button" class="bk-knopf" id="zielKopieren">Kopieren</button>
+        </div>
 
         <div class="tu-ausgabe-kopf"><h2 id="ausgabeTitel">Ausgabe</h2></div>
         <pre class="tu-ausgabe" id="ausgabe" aria-labelledby="ausgabeTitel" aria-live="polite"></pre>
@@ -116,6 +163,15 @@
   </div>
 </dialog>
 
+<dialog class="bk-bild tu-dialog tu-konzepte" id="konzepteDialog" aria-labelledby="konzepteTitel">
+  <h2 id="konzepteTitel">Konzepte</h2>
+  <div class="tu-konzeptwahl" id="konzeptWahl" role="group" aria-label="Konzept wählen"></div>
+  <div class="tu-text tu-konzepttext" id="konzeptText"></div>
+  <div class="bk-bild-knoepfe">
+    <button type="button" class="bk-knopf" id="konzepteZu">Schliessen</button>
+  </div>
+</dialog>
+
 <script src="vendor/codemirror.js"></script>
 <script src="vendor/python.js"></script>
 <script src="vendor/closebrackets.js"></script>
@@ -123,6 +179,9 @@
 <script src="vendor/lz-string.min.js"></script>
 <script src="assets/beispiele.js"></script>
 <script src="assets/fehlerhilfe.js"></script>
+<script src="assets/kurs.js"></script>
+<script src="assets/pruefung.js"></script>
 <script src="assets/app.js"></script>
+<script src="assets/kursmodus.js"></script>
 </body>
 </html>

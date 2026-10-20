@@ -20,16 +20,18 @@
 <script>
 /* Läuft in einem Sandbox-iframe ohne eigenen Ursprung: Der Schülercode sieht
    weder die gespeicherten Programme noch die Seite darum herum.
-   Nachrichten von der Seite:  start {code, faktor} · pause · weiter · tempo {faktor} · eingabe {text}
-   Nachrichten an die Seite:   bereit · aus {text} · eingabe {prompt} · fertig
+   Nachrichten von der Seite:  start {code, faktor} · pause · weiter · tempo {faktor} · eingabe {text} · fokus
+   Nachrichten an die Seite:   bereit · aus {text} · eingabe {prompt} · fertig {zeichnung, wartet}
                                · fehler {text, art, nachricht, stapel} · ansicht {groesse} · position {x, y, ausserhalb}
                                · maus {fx, fy, touch} | {weg}
+   zeichnung: Strecken mit gesenktem Stift, Punkte (dot) und Füllflächen, für die Prüfung im Kurs.
+   wartet: Das Programm hat Tasten, Klicks oder einen Timer angemeldet und läuft darum weiter (Spiele).
    Zurücksetzen entfernt das ganze iframe; ein eigener Stopp ist darum nicht nötig. */
 (function () {
   "use strict";
   var FELD = 500, LEINWAND = 1500;   // sichtbares Grundfeld, grösste Ansicht (Welteinheiten)
   var feld = document.getElementById("turtle");
-  var faktor = 1, pausiert = false, warten = null, eingabeFertig = null;
+  var faktor = 1, pausiert = false, warten = [], eingabeFertig = null, ereignisse = false;
 
   function senden(m) { parent.postMessage(m, "*"); }
 
@@ -77,6 +79,48 @@
     }
   }
 
+  // Gezeichnetes für die Prüfung: nur Strecken mit gesenktem Stift (Kreise kommen als kurze
+  // Strecken), Punkte und Füllflächen. clear() und reset() leeren die Liste der betroffenen Turtle.
+  var MAX_TEILE = 200000, zeichnung = { strecken: [], punkte: [], flaechen: [], voll: false }, turtleNr = 0;
+  function farbe(f) {
+    if (Array.isArray(f)) return (f.length > 3 ? "rgba(" : "rgb(") + f.slice(0, 4).join(",") + ")";
+    return String(f);
+  }
+  function nummer(t) { if (!t.__nr) t.__nr = ++turtleNr; return t.__nr; }
+  function platz() {
+    var z = zeichnung, n = z.strecken.length + z.punkte.length + z.flaechen.length;
+    if (n >= MAX_TEILE) z.voll = true;
+    return !z.voll;
+  }
+  function strecke(t, x1, y1, x2, y2) {
+    if (t._filling && t.__flaeche) t.__flaeche.push([x2, y2]);
+    if (!t._down || (x1 === x2 && y1 === y2) || !platz()) return;
+    zeichnung.strecken.push([x1, y1, x2, y2, farbe(t._color), t._size, nummer(t)]);
+  }
+  function punkt(t, groesse, f) {
+    if (platz()) zeichnung.punkte.push([t._x, t._y, groesse, farbe(f), nummer(t)]);
+  }
+  function fuellen(t, an) {
+    if (an) { t.__flaeche = [[t._x, t._y]]; return; }
+    var p = t.__flaeche; t.__flaeche = null;
+    if (p && p.length > 2 && platz()) zeichnung.flaechen.push({ punkte: p, farbe: farbe(t._fill), nr: nummer(t) });
+  }
+  function leeren(t) {
+    if (!t) { zeichnung.strecken = []; zeichnung.punkte = []; zeichnung.flaechen = []; return; }
+    var nr = nummer(t);
+    zeichnung.strecken = zeichnung.strecken.filter(function (s) { return s[6] !== nr; });
+    zeichnung.punkte = zeichnung.punkte.filter(function (s) { return s[4] !== nr; });
+    zeichnung.flaechen = zeichnung.flaechen.filter(function (s) { return s.nr !== nr; });
+  }
+  function zeichnungMelden() {
+    return {
+      strecken: zeichnung.strecken.map(function (s) { return s.slice(0, 6); }),
+      punkte: zeichnung.punkte.map(function (s) { return s.slice(0, 4); }),
+      flaechen: zeichnung.flaechen.map(function (f) { return { punkte: f.punkte, farbe: f.farbe }; }),
+      voll: zeichnung.voll
+    };
+  }
+
   // Tempo-Regler: Der Faktor wirkt auf die Geschwindigkeit, die das Programm mit speed() wählt.
   // speed(0) bleibt sofort; Faktor Infinity zeichnet jeden Schritt ohne Zwischenbilder.
   function tempo(s) {
@@ -91,10 +135,27 @@
   // 3. Jede Bewegung meldet ihr Ziel (für Zoom und Koordinatenanzeige).
   // 4. «from turtle import *» bietet auch bgcolor, listen, onkey … an wie in Python
   //    (setup und setworldcoordinates bewusst nicht: Sie vertragen sich nicht mit dem Zoom).
+  // 5. Strecken, Punkte und Füllflächen werden für die Prüfung gesammelt.
+  // 6. Tasten, Klicks und Timer: Das Programm läuft nach dem Ende weiter; Pause hält auch diese
+  //    Aufrufe an, und ihre Fehler werden gemeldet. listen() gibt dem Feld gleich den Fokus
+  //    (sonst wirken Tasten erst nach einem Klick ins Feld).
+  // 7. Farben wie color(0, 255, 127) ohne colormode(255): Ist ein Wert grösser als 1, gilt
+  //    0 … 255 (so hat es Trinket gehalten); color(1, 1, 1) bleibt Weiss wie in Python.
   (function anpassen() {
     var pfad = "src/lib/turtle.js", q = Sk.builtinFiles.files[pfad];
     var ersatz = [
-      ["function translate(e,a,l,o,d,_,c){", "function translate(e,a,l,o,d,_,c){Sk.TurtleGraphics.bewegt(a+o,l+d);"],
+      ["function translate(e,a,l,o,d,_,c){", "function translate(e,a,l,o,d,_,c){Sk.TurtleGraphics.bewegt(a+o,l+d);Sk.TurtleGraphics.strecke(e,a,l,a+o,l+d);"],
+      ["this.addUpdate(drawDot,!0,void 0,e,t)", "(Sk.TurtleGraphics.punkt(this,e,t),this.addUpdate(drawDot,!0,void 0,e,t))"],
+      ["e===this._filling)?void 0:(this._filling=e,", "e===this._filling)?void 0:(Sk.TurtleGraphics.fuellen(this,e),this._filling=e,"],
+      ["e.$clear=function(){return this.addUpdate(", "e.$clear=function(){return Sk.TurtleGraphics.leeren(this),this.addUpdate("],
+      ["e.$reset=e.$resetscreen=function(){var e=this,", "e.$reset=e.$resetscreen=function(){Sk.TurtleGraphics.leeren(null);var e=this,"],
+      ["Sk.misceval.applyAsync(void 0,e,", "Sk.misceval.applyAsync({\"*\":Sk.TurtleGraphics.unterbrechung},e,"],
+      ["e.$onkey=function(e,t){", "e.$onkey=function(e,t){Sk.TurtleGraphics.ereignis();"],
+      ["e.$listen=function(){this._createKeyUpListener(),", "e.$listen=function(){focusTurtle(!0),this._createKeyUpListener(),"],
+      ["e.$ontimer=function(e,t){", "e.$ontimer=function(e,t){Sk.TurtleGraphics.ereignis();"],
+      ["e.$onscreenclick=function(e,t,r){", "e.$onscreenclick=function(e,t,r){Sk.TurtleGraphics.ereignis();"],
+      ["e.$onclick=function(e,t,r){", "e.$onclick=function(e,t,r){Sk.TurtleGraphics.ereignis();", true],
+      ["t.constructor===Array&&t.length){if(255===e){", "t.constructor===Array&&t.length){if(255===e||Sk.TurtleGraphics.ueber1(t)){"],
       ["var u,m=e._computed_speed,", "var u,m=Sk.TurtleGraphics.tempo(e._computed_speed),"],
       ['addModuleMethod(Screen,y,"$title",getScreen),', 'addModuleMethod(Screen,y,"$title",getScreen),' +
         ["bgcolor", "bgpic", "exitonclick", "listen", "onkey", "onscreenclick", "ontimer", "clearscreen",
@@ -107,7 +168,7 @@
     ];
     ersatz.forEach(function (paar) {
       if (q.indexOf(paar[0]) < 0) { console.warn("Turtle-Anpassung nicht gefunden:", paar[0]); return; }
-      q = q.replace(paar[0], paar[1]);
+      q = paar[2] ? q.split(paar[0]).join(paar[1]) : q.replace(paar[0], paar[1]);
     });
     Sk.builtinFiles.files[pfad] = q;
   })();
@@ -121,7 +182,15 @@
   // Jede Unterbrechung des Programms (Zeichnen, input, regelmässiges Abgeben an den Browser)
   // läuft hier durch: Bei Pause wartet das Programm, bis «Weiter» kommt.
   function unterbrechung(susp) {
-    if (pausiert) return new Promise(function (ja) { warten = function () { ja(susp); }; });
+    if (pausiert) return new Promise(function (ja) { warten.push(function () { ja(susp); }); });
+  }
+
+  // Fehler in Aufrufen durch Tasten, Klicks oder Timer (laufen nach dem Hauptprogramm)
+  function fehlerMelden(err) {
+    var stapel = (err && err.traceback || []).map(function (t) { return t.lineno; });
+    var nachricht = "";
+    try { nachricht = err.args && err.args.v && err.args.v.length ? String(err.args.v[0]) : ""; } catch (e) { /* weiter */ }
+    senden({ typ: "fehler", text: String(err), art: (err && err.tp$name) || "", nachricht: nachricht, stapel: stapel });
   }
 
   function start(code) {
@@ -138,18 +207,19 @@
       __future__: Sk.python3,
       yieldLimit: 50
     });
-    Sk.TurtleGraphics = { target: "turtle", width: LEINWAND, height: LEINWAND, tempo: tempo, bewegt: bewegt };
+    Sk.TurtleGraphics = {
+      target: "turtle", width: LEINWAND, height: LEINWAND, tempo: tempo, bewegt: bewegt,
+      strecke: strecke, punkt: punkt, fuellen: fuellen, leeren: leeren,
+      unterbrechung: unterbrechung, ereignis: function () { ereignisse = true; },
+      ueber1: function (t) { return t.slice(0, 3).some(function (x) { return typeof x === "number" && x > 1; }); }
+    };
+    Sk.uncaughtException = fehlerMelden;
 
     Sk.misceval.asyncToPromise(function () {
       return Sk.importMainWithBody("<stdin>", false, code, true);
     }, { "*": unterbrechung }).then(function () {
-      senden({ typ: "fertig" });
-    }, function (err) {
-      var stapel = (err && err.traceback || []).map(function (t) { return t.lineno; });
-      var nachricht = "";
-      try { nachricht = err.args && err.args.v && err.args.v.length ? String(err.args.v[0]) : ""; } catch (e) { /* weiter */ }
-      senden({ typ: "fehler", text: String(err), art: (err && err.tp$name) || "", nachricht: nachricht, stapel: stapel });
-    });
+      senden({ typ: "fertig", zeichnung: zeichnungMelden(), wartet: ereignisse });
+    }, fehlerMelden);
   }
 
   window.addEventListener("message", function (e) {
@@ -157,8 +227,9 @@
     var m = e.data;
     if (m.typ === "start" && typeof m.code === "string") { faktor = m.faktor; start(m.code); }
     else if (m.typ === "tempo") faktor = m.faktor;
+    else if (m.typ === "fokus") feld.focus({ preventScroll: true });   // Tasten wirken sofort, ohne zuerst ins Feld zu klicken
     else if (m.typ === "pause") pausiert = true;
-    else if (m.typ === "weiter") { pausiert = false; if (warten) { var w = warten; warten = null; w(); } }
+    else if (m.typ === "weiter") { pausiert = false; var w = warten; warten = []; w.forEach(function (f) { f(); }); }
     else if (m.typ === "eingabe" && eingabeFertig) { var f = eingabeFertig; eingabeFertig = null; f(String(m.text)); }
   });
   senden({ typ: "bereit" });

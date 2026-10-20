@@ -21,6 +21,17 @@
 
   var BEISPIELE = window.TurtleBeispiele;
 
+  // ?kurs=… öffnet den Kursmodus (assets/kursmodus.js); ohne bleibt alles beim freien Programmieren.
+  var such = new URLSearchParams(location.search), KURS = null, kursFehler = null;
+  try {
+    if (such.get("kurs") !== null) KURS = window.TurtleKurs.adresse(such.get("kurs"), location.origin + location.pathname.replace(/[^/]*$/, ""));
+  } catch (e) { kursFehler = e.message; }
+  if (such.get("kurs") !== null && !KURS && !kursFehler) kursFehler = "Die Kursadresse fehlt.";
+
+  // Programm aus dem Kurs statt aus «Meine Programme»: {name, speichern(code) → true/false}
+  var fremd = null;
+  var hooks = {};
+
   /* ---------- Speicher ---------------------------------------- */
 
   var db = { programme: {}, aktuell: null };
@@ -101,14 +112,18 @@
     speicherTimer = setTimeout(sofortSpeichern, 400);
     teilenZuruecksetzen();
   }
+  function gespeichertZeigen(ok, ts) {
+    $("gespeichert").textContent = ok ? "Gespeichert in diesem Browser · " + zeit(ts)
+      : "Nicht gespeichert: Dieser Browser erlaubt es nicht (privates Fenster?). Bitte herunterladen.";
+  }
   function sofortSpeichern() {
     clearTimeout(speicherTimer); speicherTimer = null;
+    if (fremd) { gespeichertZeigen(fremd.speichern(editor.getValue()), Date.now()); return; }
     var p = aktuell(); if (!p) return;
     p.code = editor.getValue();
     p.name = $("name").value.trim() || "Ohne Namen";
     p.geaendert = Date.now();
-    if (speichern()) $("gespeichert").textContent = "Gespeichert in diesem Browser · " + zeit(p.geaendert);
-    else $("gespeichert").textContent = "Nicht gespeichert: Dieser Browser erlaubt es nicht (privates Fenster?). Bitte herunterladen.";
+    gespeichertZeigen(speichern(), p.geaendert);
   }
   editor.on("change", aenderung);
   $("name").addEventListener("input", aenderung);
@@ -118,6 +133,7 @@
   function oeffnen(id) {
     if (speicherTimer) sofortSpeichern();
     zuruecksetzen();
+    fremd = null;
     db.aktuell = id;
     var p = aktuell();
     ladend = true;
@@ -127,9 +143,22 @@
     ladend = false;
     teilenZuruecksetzen();
     speichern();
-    $("gespeichert").textContent = speicherOk ? "Gespeichert in diesem Browser · " + zeit(p.geaendert)
-      : "Nicht gespeichert: Dieser Browser erlaubt es nicht (privates Fenster?). Bitte herunterladen.";
+    gespeichertZeigen(speicherOk, p.geaendert);
   }
+
+  // Kursmodus: Programm einer Aufgabe öffnen (wird über quelle.speichern gesichert)
+  function programmLaden(code, quelle) {
+    if (speicherTimer) sofortSpeichern();
+    zuruecksetzen();
+    fremd = quelle;
+    ladend = true;
+    editor.setValue(code);
+    editor.clearHistory();
+    ladend = false;
+    teilenZuruecksetzen();
+    gespeichertZeigen(true, Date.now());
+  }
+  function programmName() { return fremd ? fremd.name : aktuell().name; }
 
   /* ---------- Beispiele und Neu --------------------------------- */
 
@@ -194,7 +223,7 @@
 
   $("knopfLaden").addEventListener("click", function () {
     if (speicherTimer) sofortSpeichern();
-    var n = dateiname(aktuell().name) + ".py";
+    var n = dateiname(programmName()) + ".py";
     dateiSpeichern(n, editor.getValue());
     teilenMeldung("Heruntergeladen als «" + n + "».");
   });
@@ -235,8 +264,7 @@
 
   $("knopfTeilen").addEventListener("click", function () {
     if (speicherTimer) sofortSpeichern();
-    var p = aktuell();
-    var inhalt = LZString.compressToEncodedURIComponent(JSON.stringify({ n: p.name, c: editor.getValue() }));
+    var inhalt = LZString.compressToEncodedURIComponent(JSON.stringify({ n: programmName(), c: editor.getValue() }));
     var link = location.origin + location.pathname + LINK_PRAEFIX + inhalt;
     var feld = $("teilenLink");
     feld.value = link; feld.hidden = false;
@@ -283,26 +311,30 @@
     $("importDialog").close();
   });
   $("importNein").addEventListener("click", function () { empfangen = null; $("importDialog").close(); });
-  window.addEventListener("hashchange", linkLesen);
+  window.addEventListener("hashchange", function () { if (!KURS) linkLesen(); });
 
   /* ---------- Ablauf -------------------------------------------- */
 
-  // zustand: "bereit" | "laeuft" | "pause" | "eingabe" | "fertig" | "fehler"
-  var rahmen = null, zustand = "bereit", fehlerZeile = null;
+  // zustand: "bereit" | "laeuft" | "spiel" | "pause" | "eingabe" | "fertig" | "fehler"
+  // «spiel»: Das Hauptprogramm ist durch, Tasten, Klicks oder ein Timer halten es am Laufen.
+  var rahmen = null, zustand = "bereit", fehlerZeile = null, spielt = false;
 
   var ZUSTAND_TEXT = {
     bereit: "Bereit.", laeuft: "Läuft …", pause: "Pausiert.",
+    spiel: "Läuft weiter: wartet auf Tasten, Klicks oder den Timer.",
     eingabe: "Wartet auf Ihre Eingabe …", fertig: "Fertig.", fehler: "Abgebrochen wegen eines Fehlers."
   };
   function setzeZustand(z) {
     zustand = z;
     $("zustand").textContent = ZUSTAND_TEXT[z];
     var st = $("knopfStart");
-    st.textContent = (z === "laeuft" || z === "eingabe") ? "Pause" : (z === "pause" ? "Weiter" : "Start");
+    st.textContent = (z === "laeuft" || z === "eingabe" || z === "spiel") ? "Pause" : (z === "pause" ? "Weiter" : "Start");
     st.disabled = z === "eingabe";
   }
 
   function faktor() { return TEMPO[Number($("tempo").value) - 1] || 1; }
+  // Tasten gehen gleich ans Programm (Spiele): erst das iframe, dann darin das Feld fokussieren
+  function fokusInsFeld() { if (rahmen) { rahmen.focus({ preventScroll: true }); senden({ typ: "fokus" }); } }
   function senden(m) { if (rahmen && rahmen.contentWindow) rahmen.contentWindow.postMessage(m, "*"); }
 
   function ausgeben(text, klasse) {
@@ -325,7 +357,9 @@
     $("eingabeZeile").hidden = true;
     fehlerzeileWeg();
     ansichtZuruecksetzen();
+    spielt = false;
     setzeZustand("bereit");
+    if (hooks.zurueck) hooks.zurueck();
   }
 
   // Die Laufzeit wird einmal geladen und als srcdoc (mit eingebetteten Skripten) für jeden Start
@@ -366,6 +400,7 @@
     $("feld").append(rahmen);
     $("leer").hidden = true;
     setzeZustand("laeuft");
+    if (hooks.start) hooks.start();
     var dieser = rahmen;
     laufzeitLaden().then(function (html) {
       if (rahmen === dieser) dieser.srcdoc = html;
@@ -381,8 +416,11 @@
   }
 
   $("knopfStart").addEventListener("click", function () {
-    if (zustand === "laeuft") { senden({ typ: "pause" }); setzeZustand("pause"); }
-    else if (zustand === "pause") { senden({ typ: "weiter" }); setzeZustand("laeuft"); }
+    if (zustand === "laeuft" || zustand === "spiel") { senden({ typ: "pause" }); setzeZustand("pause"); }
+    else if (zustand === "pause") {
+      senden({ typ: "weiter" }); setzeZustand(spielt ? "spiel" : "laeuft");
+      if (spielt) fokusInsFeld();
+    }
     else neuStarten();
   });
   $("knopfReset").addEventListener("click", zuruecksetzen);
@@ -454,7 +492,7 @@
   /* ---------- Koordinatensystem und Ausschnitt ------------------ */
 
   var FELD = 500;
-  var ansichtGroesse = FELD, turtlePos = null, koordinatenAn = false;
+  var ansichtGroesse = FELD, turtlePos = null, koordinatenAn = false, vorlageSvg = "";
   var SVG = "http://www.w3.org/2000/svg";
 
   function zahl(x) { var r = Math.round(x); return (r < 0 ? "−" : "") + Math.abs(r); }
@@ -494,6 +532,8 @@
       text(h - fs * 0.5, -fs * 0.5, "x", "end");
       text(fs * 0.6, -h + fs * 1.2, "y", "start");
     }
+    // Zielbild als blasse Vorlage (Weltkoordinaten, y nach oben)
+    if (vorlageSvg) teile.push('<g class="vorlage" transform="scale(1,-1)">' + vorlageSvg + "</g>");
     svg.setAttribute("viewBox", -h + " " + -h + " " + v + " " + v);
     svg.innerHTML = teile.join("");
   }
@@ -566,8 +606,15 @@
       $("eingabe").value = "";
       $("eingabe").focus();
     }
-    else if (m.typ === "fertig") setzeZustand("fertig");
-    else if (m.typ === "fehler") { setzeZustand("fehler"); fehlerZeigen(m); }
+    else if (m.typ === "fertig") {
+      spielt = !!m.wartet;
+      if (zustand !== "pause") setzeZustand(spielt ? "spiel" : "fertig");
+      if (spielt) fokusInsFeld();
+      var z = m.zeichnung && typeof m.zeichnung === "object" ? m.zeichnung : null;
+      if (z) zielWerkzeugZeigen(z);
+      if (hooks.fertig) hooks.fertig(z, spielt, rahmen.dataset.code);
+    }
+    else if (m.typ === "fehler") { spielt = false; setzeZustand("fehler"); fehlerZeigen(m); if (hooks.fehler) hooks.fehler(); }
     else if (m.typ === "ansicht" && m.groesse > 0) { ansichtGroesse = Number(m.groesse); rasterZeichnen(); feldInfoZeigen(); }
     else if (m.typ === "maus") { if (m.weg) mausWeg(); else mausZeigen(Number(m.fx), Number(m.fy), !!m.touch); }
     else if (m.typ === "position") {
@@ -586,6 +633,33 @@
   }
   $("knopfEingabe").addEventListener("click", eingabeSenden);
   $("eingabe").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); eingabeSenden(); } });
+
+  /* ---------- Zielbild-Werkzeug (?werkzeug=ziel) ---------------- */
+
+  // Für Lehrpersonen: Die Zeichnung des letzten Laufs als «ziel» für kurs.json.
+  var werkzeugZiel = such.get("werkzeug") === "ziel", letzteZeichnung = null;
+  $("zielWerkzeug").hidden = !werkzeugZiel;
+  function zielWerkzeugZeigen(z) {
+    if (!werkzeugZiel) return;
+    letzteZeichnung = z;
+    var ziel = window.TurtlePruefung.zielAusZeichnung(z, $("zielFarbe").checked, farbeText);
+    $("zielText").value = JSON.stringify(ziel).replace(/\{"art"/g, '\n  {"art"').replace(/\]\}$/, "\n]}");
+  }
+  $("zielFarbe").addEventListener("change", function () { if (letzteZeichnung) zielWerkzeugZeigen(letzteZeichnung); });
+  $("zielKopieren").addEventListener("click", function () {
+    var t = $("zielText"); t.focus(); t.select();
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t.value).catch(function () { /* markiert */ });
+  });
+
+  // Farbangaben vereinheitlichen (Name, #rgb, rgb(…)) über den Browser: «#rrggbb», Deckkraft weg
+  var farbKontext = document.createElement("canvas").getContext("2d");
+  function farbeText(f) {
+    farbKontext.fillStyle = "#000000";
+    farbKontext.fillStyle = String(f);
+    var w = farbKontext.fillStyle, m = /^rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(w);
+    if (!m) return w;
+    return "#" + [m[1], m[2], m[3]].map(function (x) { return ("0" + Number(x).toString(16)).slice(-2); }).join("");
+  }
 
   /* ---------- Tempo --------------------------------------------- */
 
@@ -643,13 +717,25 @@
 
   /* ---------- Start --------------------------------------------- */
 
-  laden();
-  if (!db.aktuell || !db.programme[db.aktuell]) {
-    var alle = sortiert();
-    db.aktuell = alle.length ? alle[0].id : neuesProgramm("Mein erstes Programm", BEISPIELE.start).id;
+  // Freies Programmieren: zuletzt offenes Programm aus «Meine Programme»
+  function freiStarten() {
+    laden();
+    if (!db.aktuell || !db.programme[db.aktuell]) {
+      var alle = sortiert();
+      db.aktuell = alle.length ? alle[0].id : neuesProgramm("Mein erstes Programm", BEISPIELE.start).id;
+    }
+    oeffnen(db.aktuell);
+    linkLesen();
   }
-  oeffnen(db.aktuell);
-  linkLesen();
+
+  window.TurtleApp = {
+    kurs: KURS, kursFehler: kursFehler, editor: editor, hooks: hooks,
+    programmLaden: programmLaden, freiStarten: freiStarten, zuruecksetzen: zuruecksetzen,
+    sofortSpeichern: function () { if (speicherTimer) sofortSpeichern(); },
+    vorlage: function (svg) { vorlageSvg = svg || ""; rasterZeichnen(); },
+    farbeText: farbeText
+  };
+  if (!KURS) freiStarten();
   try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) { /* freiwillig */ }
   laufzeitLaden();   // schon jetzt, damit «Start» auch nach Verbindungsverlust geht
 

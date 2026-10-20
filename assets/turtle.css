@@ -179,3 +179,83 @@ body[data-vollbild="feld"] .tu-seite{min-height:0;overflow:auto}
   body[data-vollbild="feld"] .bk-lauf{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr);row-gap:12px}
   body[data-vollbild="feld"] .tu-buehne > *{width:min(100%,calc(100vh - 380px));width:min(100%,calc(100dvh - 380px))}
 }
+
+/* ---------- Kursmodus ---------- */
+.tu-kurs{display:flex;flex-direction:column;gap:12px;min-width:0}
+.tu-kurs[hidden],.bk-aufgabe[hidden],.tu-kursleiste[hidden]{display:none}
+.tu-kursleiste{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin:0}
+.tu-frei{color:var(--accent);font-size:.92rem}
+.im-kurs .tu-kopf,.im-kurs #knopfNeu,.im-kurs #knopfProgramme{display:none}
+#knopfStartcode[hidden]{display:none}
+.tu-reihen-trenner{align-self:center;font-size:.8rem;color:var(--ink-soft);margin-left:6px}
+.bk-reihe .tu-stand{margin-left:8px;font-weight:400;color:var(--ink-soft)}
+.bk-reihe .tu-stand:empty{display:none}
+.bk-reihe.tu-weiterfuehrend{border-style:dashed}
+.bk-aufgaben .tu-abschnitt{
+  flex-basis:100%;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.72rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-soft);margin:4px 0 -2px;
+}
+.bk-aufgaben li:first-child.tu-abschnitt{margin-top:0}
+.bk-tab .haken.selbst{color:var(--ink-soft)}
+
+.tu-etiketten{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}
+.tu-etiketten[hidden]{display:none}
+.tu-etikett{
+  font:inherit;font-size:.75rem;line-height:1.3;padding:3px 8px;border-radius:999px;
+  border:1px solid var(--line);background:var(--ground);color:var(--ink-soft);
+}
+.tu-etikett.zusatz{border-color:var(--accent);color:var(--accent)}
+.tu-etikett.kontrolle{border-color:var(--no);color:var(--no)}
+button.tu-etikett{cursor:pointer;color:var(--accent);min-height:28px}
+button.tu-etikett:hover{background:var(--accent-soft)}
+button.tu-etikett:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.tu-vorhersage{margin:0 0 8px !important;padding:6px 10px;border-left:3px solid var(--accent);background:var(--accent-soft);font-size:.92rem}
+.tu-vorhersage[hidden],.tu-fragen[hidden],.tu-checkliste[hidden],.tu-bild[hidden],.tu-weiter[hidden]{display:none}
+.tu-text p{margin:0 0 8px}
+.tu-text p:last-child{margin-bottom:0}
+.tu-text ul{margin:0 0 8px;padding-left:1.3em}
+.tu-text code,.tu-fragen code,.tu-checkliste code,.bk-hinweis code{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.88em;padding:0 3px;
+  background:var(--ground);border:1px solid var(--line);border-radius:3px;
+}
+.tu-kurscode{
+  margin:0 0 8px;max-width:100%;overflow-x:auto;padding:8px 12px;
+  font:.85rem/1.5 "IBM Plex Mono",ui-monospace,monospace;white-space:pre;
+  color:var(--ink);background:var(--ground);border:1px solid var(--line);border-radius:var(--radius);
+}
+.tu-fragen,.tu-checkliste{margin:8px 0 0;padding-left:1.5em}
+.tu-fragen li,.tu-checkliste li{margin:2px 0}
+.tu-checkliste{list-style:"☐  "}
+.tu-bild{display:block;margin-top:10px;max-width:min(100%,360px);height:auto;border:1px solid var(--line);border-radius:var(--radius);background:#fff}
+.tu-weiter{margin-top:8px !important;font-size:.85rem;color:var(--ink-soft)}
+.tu-erledigt{display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;margin-top:10px}
+.tu-erledigt .bk-nebel-schalter{margin:0;min-height:36px}
+.tu-status{font-size:.85rem;color:var(--ink-soft);min-height:1.5em}
+.tu-status.ok{color:var(--ok);font-weight:600}
+
+/* Zielbild als Vorlage im Feld */
+.tu-raster .vorlage path{fill:none;stroke-linecap:round;stroke-linejoin:round;opacity:.22}
+.tu-raster .vorlage .fl{opacity:.16}
+.tu-raster .vorlage circle{opacity:.3}
+#vorlageSchalter[hidden],#zielWerkzeug[hidden]{display:none}
+.tu-zieltext{
+  align-self:stretch;width:100%;font:.75rem/1.4 "IBM Plex Mono",ui-monospace,monospace;padding:8px;
+  color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);resize:vertical;
+}
+
+/* Konzepte */
+.tu-konzepte{width:min(94vw,760px)}
+.tu-konzeptwahl{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.tu-konzeptwahl .bk-reihe{min-height:36px;padding:4px 10px}
+.tu-konzepttext{max-height:min(60vh,560px);overflow:auto;margin-bottom:12px;padding-right:4px}
+.tu-konzepttext h3{margin:0 0 8px;font-size:1.05rem}
+body[data-vollbild] .tu-kurs{display:none}
+.tu-text h4{margin:14px 0 6px;font-size:.95rem}
+.tu-text h4:first-child{margin-top:0}
+.tu-tipptext{padding:2px 0 6px}
+.tu-tipptext + .tu-tipptext{border-top:1px dashed var(--line);padding-top:8px}
+@media (max-width:560px){
+  .bk-reihen{flex-wrap:nowrap;overflow-x:auto;padding-bottom:6px}
+  .bk-reihe,.tu-reihen-trenner{white-space:nowrap;flex:none}
+  .bk-aufgaben .tu-abschnitt{flex:none;align-self:center;margin:0 2px}
+}

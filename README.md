@@ -19,6 +19,9 @@ assets/turtle.css         Editor, Turtle-Feld, Ausgabe, Programmliste
 assets/app.js             Speichern, Teilen, Ablauf (Start/Pause/Weiter, Tempo)
 assets/beispiele.js       Startprogramm und Beispiele
 assets/fehlerhilfe.js     erklärt Python-Fehler auf Deutsch (ohne DOM, auch mit node testbar)
+assets/kurs.js            Kursadresse auflösen, kurs.json prüfen, Texte zerlegen (ohne DOM)
+assets/pruefung.js        Zeichnung mit dem Zielbild vergleichen, Zielbild-Werkzeug (ohne DOM)
+assets/kursmodus.js       Kursmodus: Reihen, Aufgaben, Fortschritt (nur mit ?kurs=…)
 laufzeit/skulpt.html      führt das Programm aus (Sandbox-iframe)
 sw.js                     Service Worker für den Offline-Betrieb
 vendor/                   Skulpt 1.2.0, CodeMirror 5.65.18, lz-string 1.5.0 (mit Lizenzen)
@@ -53,6 +56,15 @@ vendor/                   Skulpt 1.2.0, CodeMirror 5.65.18, lz-string 1.5.0 (mit
   Wo der Browser es erlaubt, blendet der Vollbildmodus auch die Browserleisten aus; Esc oder
   «Verkleinern» beendet ihn. Wo nicht (z. B. iPhone), füllt die Ansicht trotzdem das Fenster.
 
+## Spiele (Tasten, Klicks, Timer)
+
+Meldet ein Programm mit `onkey`, `onscreenclick`, `onclick` oder `ontimer` etwas an, läuft es
+nach dem Ende des Hauptprogramms weiter. Unter «Start» steht dann «Läuft weiter: wartet auf
+Tasten, Klicks oder den Timer.», «Start» heisst «Pause» und hält auch diese Aufrufe an;
+«Zurücksetzen» beendet das Programm. Das Feld bekommt den Fokus, die Tasten wirken also sofort.
+Fehler in solchen Aufrufen werden wie gewohnt gemeldet. Mit `tracer(0)` und `update()` zeichnen
+Spiele flüssig.
+
 ## Beispiele und Schreibweise
 
 Alle Beispiele und «Neu» beginnen mit `from turtle import *`: Die Befehle stehen dann ohne
@@ -77,6 +89,128 @@ fehlenden Klammer). `fehlerhilfe.js` sucht darum selbst: fehlender Doppelpunkt, 
 Bei unbekannten Namen und Befehlen schlägt sie ähnliche Namen aus dem Programm, aus Python und aus
 dem Turtle-Modul vor.
 
+## Kursmodus
+
+`?kurs=…` öffnet einen Kurs mit Reihen und Aufgaben, Bedienung und Aussehen wie in Kara. Ohne
+`?kurs=` bleibt alles wie oben. Die Aufgaben liegen nicht im Tool, sondern in einem eigenen Repo,
+z. B. [masta-nksa/turtle-aufgaben](https://github.com/masta-nksa/turtle-aufgaben):
+
+| Aufruf | lädt |
+| --- | --- |
+| `?kurs=turtle-aufgaben/beispiel` | `<Ordner über dem Tool>/turtle-aufgaben/beispiel/kurs.json`, also `https://masta-nksa.github.io/turtle-aufgaben/beispiel/kurs.json` |
+| `?kurs=besitzer/repo/kurs` | `https://besitzer.github.io/repo/kurs/kurs.json` (eigene Kurs-Repos anderer Lehrpersonen; GitHub Pages erlaubt den Abruf) |
+
+Jeder Teil der Adresse darf nur Buchstaben, Ziffern, `.`, `_` und `-` enthalten (kein `..`).
+Dazu kommen `&reihe=…&aufgabe=…`; die Adresszeile folgt der gewählten Aufgabe.
+
+- **Reihen** (Knöpfe, mit «erledigt/Pflicht», z. B. «3/12») und **Aufgaben** (Reiter mit Haken),
+  gegliedert in Abschnitte wie «Entdecken», «Konzepte sichern», «Lernkontrolle».
+- **Aufgabenkarte:** Titel, Etiketten (★ Zusatzaufgabe, Lernkontrolle, Konzepte zum Nachlesen),
+  Text, Fragen, Checkliste, Bild, gestufte Hinweise («Hinweis anzeigen», «Noch ein Tipp»),
+  «Als erledigt markieren», «Link zum Teilen kopieren» (öffnet genau diese Aufgabe).
+- **Konzepte** (Knopf oben): Erklärungen mit Beispielen, die zum Kurs gehören.
+- **Programm je Aufgabe:** Beim ersten Öffnen steht der Startcode da (oder bei `weiterVon` das
+  eigene Programm der genannten Aufgabe). «Zurück zum Startcode» fragt zuerst. «Neu», «Beispiele»
+  und «Meine Programme» sind im Kurs ausgeblendet; «Programm als Link kopieren» und
+  «Herunterladen (.py)» bleiben.
+- **Erledigt** auf zwei Wegen: automatisch geprüft (grüner Haken) oder selbst abgehakt (grauer
+  Haken, lässt sich zurücknehmen). Gespeichert wird beides getrennt.
+- **Zielbild als Vorlage einblenden** (Schalter über dem Feld) legt das Ziel blass unter die
+  Zeichnung; die Breite der Linien zeigt ungefähr die Toleranz.
+- Startcode läuft wie alles nur nach «Start». Kursdaten erscheinen nur als Text, nie als HTML.
+- Lässt sich ein Kurs nicht laden, erscheint der Grund, und das Tool läuft ohne Kurs weiter.
+
+### Automatische Prüfung
+
+Geprüft wird nur das Ergebnis, nie der Code. Die Laufzeit sammelt alle Strecken mit gesenktem
+Stift (auch Kreise, die Skulpt aus kurzen Strecken zeichnet), alle Punkte (`dot`) und alle
+Füllflächen; `clear()` und `reset()` entfernen sie wieder. Nach dem Lauf vergleicht
+`pruefung.js`:
+
+- **Linien:** Ziel und Zeichnung werden in Abständen von höchstens 1 abgetastet. *Abdeckung* =
+  Anteil der Zielpunkte, bei denen eine gezeichnete Linie näher als `toleranz` liegt;
+  *Genauigkeit* = Anteil der gezeichneten Punkte nahe am Ziel. Beide müssen mindestens
+  `schwelle` erreichen (Vorgabe 6 und 0.95). Reihenfolge, Richtung, doppelt gezeichnete Linien und
+  die Annäherung von Kreisen spielen so keine Rolle.
+- **Farben** nur, wo ein Zielelement eine `farbe` hat (Name oder `#rrggbb`, verglichen über den
+  Browser; Deckkraft zählt nicht).
+- **Punkte:** Jeder Zielpunkt muss vorkommen (Ort, ungefähre Grösse, ggf. Farbe), keiner zu viel.
+- **Flächen:** Die gerasterten Flächen müssen sich zu mindestens 90 % decken. Linien auf dem Rand
+  oder innerhalb einer Zielfläche gelten nicht als daneben.
+
+Die Rückmeldung sagt, was fehlt («Vom Zielbild fehlt noch etwas: 70 % sind gezeichnet», «Die
+Farbe stimmt noch nicht», «Ein Punkt fehlt» …). Spiele, Zufallsbilder und freie Aufgaben haben
+kein Ziel; sie werden selbst abgehakt.
+
+### Aufgabenformat (`kurs.json`)
+
+```json
+{
+  "format": 1,
+  "titel": "Programmieren mit der Turtle",
+  "untertitel": "…",
+  "konzepte": [
+    { "id": "schleifen", "titel": "Schleifen", "text": "Mit `for` wiederholen …\n\n```\nfor i in range(4):\n    forward(100)\n```" }
+  ],
+  "reihen": [
+    { "id": "wiederholen", "titel": "2 · Wiederholen", "untertitel": "…",
+      "aufgaben": [
+        { "id": "achteck", "titel": "Achteck", "abschnitt": "Entdecken",
+          "text": "Zeichnen Sie ein Achteck mit Seitenlänge 50 …",
+          "konzepte": ["schleifen"],
+          "hinweise": ["Acht Ecken, zusammen eine ganze Drehung: 360 : 8."],
+          "startcode": "from turtle import *\n\n",
+          "ziel": { "elemente": [ { "art": "linienzug", "punkte": [[0, 0], [50, 0], [85.4, -35.4]] } ] } }
+      ] }
+  ]
+}
+```
+
+Kurs: `format` (1), `titel`, optional `untertitel`, `konzepte`, `reihen` (1–30).
+Reihe: `id`, `titel`, optional `untertitel`, `weiterfuehrend: true` (abgesetzt hinter den
+übrigen, gestrichelt), `aufgaben` (1–80).
+
+| Feld der Aufgabe | Bedeutung |
+| --- | --- |
+| `id` | Pflicht; Kleinbuchstaben, Ziffern, `-`, `_`; eindeutig im ganzen Kurs (Fortschritt und Programm hängen daran) |
+| `titel`, `text` | Pflicht |
+| `abschnitt` | Zwischentitel in der Reiterleiste, gilt ab dieser Aufgabe (z. B. «Entdecken») |
+| `fragen` | nummerierte Fragen zum Code |
+| `hinweise` | Tipps, die nacheinander erscheinen |
+| `checkliste` | Punkte zum Selbst-Prüfen (Spiele, freie Aufgaben) |
+| `konzepte` | ids aus `konzepte`; erscheinen als Etiketten |
+| `startcode` | Programm beim ersten Öffnen (sonst `from turtle import *`) |
+| `weiterVon` | id einer früheren Aufgabe: beim ersten Öffnen deren Programm übernehmen |
+| `vorhersage: true` | Hinweis «Überlegen Sie zuerst, was dieses Programm zeichnet …» |
+| `zusatz: true` | ★, zählt nicht zum Pflichtfortschritt der Reihe |
+| `kontrolle: true` | Lernkontrolle: Etikett, keine Hinweise |
+| `bild` | Bild im Kursordner, z. B. `bilder/blume.png` (png, jpg, gif, svg, webp) |
+| `ziel` | Zielbild für die automatische Prüfung (unten) |
+| `bedingungen` | reserviert für Zusatzbedingungen (z. B. höchstens n Zeilen); noch ohne Wirkung |
+
+Texte (auch Konzepte, Fragen, Hinweise): Leerzeile = neuer Absatz, `` `…` `` = Code im Text,
+` ``` ` auf eigenen Zeilen = Codeblock, `- ` am Zeilenanfang = Aufzählung, `## ` = Zwischentitel.
+Mehr nicht; HTML erscheint als Text.
+
+`ziel`: `elemente` (1–2000), optional `toleranz` (1–50, Vorgabe 6) und `schwelle` (0.5–1,
+Vorgabe 0.95). Koordinaten wie in Turtle (Start bei (0, 0), y nach oben), Winkel in Grad.
+
+| Element | Felder |
+| --- | --- |
+| `strecke` | `von`, `bis` |
+| `linienzug` | `punkte` (mindestens 2), optional `geschlossen: true` |
+| `kreis` | `mitte`, `radius`, optional `von`, `bis` (Bogen, Grad ab der x-Achse, gegen den Uhrzeigersinn) |
+| `punkt` | `ort`, optional `groesse` (Durchmesser wie bei `dot`) |
+| `flaeche` | `punkte` (mindestens 3), optional `rand: true` (Rand muss auch gezeichnet sein) |
+
+Jedes Element kann `farbe` haben. Lösungen gehören nicht in den Kurs, nur das Ziel.
+
+### Zielbild-Werkzeug
+
+Mit `?werkzeug=ziel` (auch zusammen mit `?kurs=…`) erscheint unter dem Feld nach jedem Lauf die
+Zeichnung als fertiges `ziel` zum Kopieren, wahlweise mit Farben. So lässt man die eigene Lösung
+laufen und übernimmt nur das Ergebnis; Koordinaten muss niemand von Hand ausrechnen.
+
 ## Speichern und Teilen
 
 - Jede Änderung bleibt im Browser (`localStorage`), auch nach dem Schliessen.
@@ -95,6 +229,7 @@ löschen, die länger nicht besucht wurden; wichtige Programme darum herunterlad
 | `turtle.programme.v1` | alle Programme und welches offen ist |
 | `turtle.tempo.v1` | Stellung des Tempo-Reglers |
 | `turtle.koordinaten.v1` | Koordinatensystem ein/aus |
+| `turtle.kurs.<kurs>.v1` | im Kurs: Programm je Aufgabe, erledigt (geprüft/selbst), zuletzt offene Aufgabe; `<kurs>` z. B. `turtle-aufgaben/beispiel` |
 
 Kara, Checks und Turtle liegen unter `masta-nksa.github.io` und teilen sich den
 `localStorage`; die Präfixe `kara.` und `turtle.` halten sie auseinander.
@@ -113,6 +248,9 @@ Kara, Checks und Turtle liegen unter `masta-nksa.github.io` und teilen sich den
   `VERSION` in `sw.js` hochzählen.
 - Einen empfangenen Teilen-Link kann man ohne Netz nur öffnen, wenn die Seite auf diesem Gerät
   schon einmal geladen wurde.
+- Kurse: `kurs.json` und die Bilder legt die Seite selbst im Browser ab (Speicher `turtle-kurse`),
+  auch ohne Service Worker; der Service Worker behandelt sie ebenso (zuerst Netz, sonst Speicher,
+  auch aus anderen `*.github.io`-Repos). Ein Kurs geht offline, sobald er einmal geladen war.
 
 ## Sicherheit
 
@@ -126,7 +264,11 @@ verändern. Die Seite und das iframe sprechen nur über `postMessage`.
 Quelltext des Turtle-Moduls (aus `skulpt-stdlib.js`): Bewegungen und Drehungen fragen den
 Tempo-Faktor ab, jede Bewegung meldet ihr Ziel (für Zoom und Koordinatenanzeige), Mausklicks
 rechnen Zoom und Skalierung des Feldes heraus, und `from turtle import *` bietet zusätzliche
-Bildschirm-Befehle wie `bgcolor` an. Die Laufzeit ist durchsichtig; Kacheln und
+Bildschirm-Befehle wie `bgcolor` an. Für den Kurs werden Strecken, Punkte und Füllflächen
+gesammelt; für Spiele hält «Pause» auch Aufrufe durch Tasten und Timer an, Fehler darin werden
+gemeldet, und `listen()` gibt dem Feld den Fokus. Farben wie `color(0, 255, 127)` ohne
+`colormode(255)` gelten als 0 … 255, sobald ein Wert grösser als 1 ist (so hat es Trinket
+gehalten; `color(1, 1, 1)` bleibt Weiss). Die Laufzeit ist durchsichtig; Kacheln und
 Koordinatensystem zeichnet die Seite darunter. Findet es eine Stelle nicht (etwa nach einem
 Skulpt-Update), meldet es das in der Konsole; das Programm läuft trotzdem, nur ohne die
 entsprechende Funktion.
@@ -137,6 +279,9 @@ entsprechende Funktion.
 python3 -m http.server 8000
 ```
 … und `http://localhost:8000/` öffnen.
+
+Mit einem Kurs: Server im Ordner über `turtle/` und `turtle-aufgaben/` starten und
+`http://localhost:8000/turtle/?kurs=turtle-aufgaben/beispiel` öffnen.
 
 ## GitHub Pages
 

@@ -3,6 +3,7 @@
    nach dem ersten Besuch auch ohne Internet startet.
    - Eigene Dateien: zuerst aus dem Netz (immer aktuell), ohne Netz aus dem Speicher.
    - vendor/ und Schriften: aus dem Speicher (ändern sich nicht).
+   - Kurse (kurs.json, Bilder), auch aus anderen *.github.io-Repos: zuerst Netz, sonst Speicher.
    Neue Datei im Repo? In DATEIEN eintragen. vendor/ geändert? VERSION hochzählen.
    ============================================================ */
 "use strict";
@@ -16,7 +17,10 @@ var DATEIEN = [
   "assets/beispiele.js",
   "assets/favicon.svg",
   "assets/fehlerhilfe.js",
+  "assets/kurs.js",
+  "assets/kursmodus.js",
   "assets/oberflaeche.css",
+  "assets/pruefung.js",
   "assets/turtle.css",
   "laufzeit/skulpt.html",
   "vendor/closebrackets.js",
@@ -38,7 +42,8 @@ self.addEventListener("install", function (e) {
 
 self.addEventListener("activate", function (e) {
   e.waitUntil(caches.keys().then(function (alle) {
-    return Promise.all(alle.filter(function (k) { return k.indexOf("turtle-") === 0 && k !== VERSION; })
+    // «turtle-kurse» (von der Seite abgelegte Kurse) bleibt
+    return Promise.all(alle.filter(function (k) { return k.indexOf("turtle-v") === 0 && k !== VERSION; })
       .map(function (k) { return caches.delete(k); }));
   }).then(function () { return self.clients.claim(); }));
 });
@@ -64,7 +69,7 @@ self.addEventListener("fetch", function (e) {
     }));
     return;
   }
-  if (url.origin !== location.origin) return;
+  if (url.origin !== location.origin && !/\.github\.io$/.test(url.hostname)) return;
 
   // Eigene Dateien: zuerst Netz, ohne Netz aus dem Speicher (Adresse ohne ?… und #…)
   e.respondWith(fetch(anfrage).then(function (a) { return ablegen(anfrage, a); }).catch(function () {

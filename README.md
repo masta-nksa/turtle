@@ -103,11 +103,28 @@ z. B. [masta-nksa/turtle-aufgaben](https://github.com/masta-nksa/turtle-aufgaben
 Jeder Teil der Adresse darf nur Buchstaben, Ziffern, `.`, `_` und `-` enthalten (kein `..`).
 Dazu kommen `&reihe=…&aufgabe=…`; die Adresszeile folgt der gewählten Aufgabe.
 
-- **Reihen** (Knöpfe, mit «erledigt/Pflicht», z. B. «3/12») und **Aufgaben** (Reiter mit Haken),
-  gegliedert in Abschnitte wie «Entdecken», «Konzepte sichern», «Lernkontrolle».
-- **Aufgabenkarte:** Titel, Etiketten (★ Zusatzaufgabe, Lernkontrolle, Konzepte zum Nachlesen),
-  Text, Fragen, Checkliste, Bild, gestufte Hinweise («Hinweis anzeigen», «Noch ein Tipp»),
+- **Kopf:** eine Zeile mit dem Kurstitel, «Übersicht», «Konzepte» und ⋯ (darin «Ohne Kurs
+  programmieren»).
+- **Lernpfad:** Die Reihen (Einheiten) stehen als Kreise in einer Zeile; der Ring zeigt den Anteil
+  erledigter Pflichtaufgaben, beim Darüberfahren erscheint der Titel. Daneben die aktuelle Reihe mit
+  «erledigt / Pflicht». Darunter die Aufgaben der Reihe als Stationen einer Linie, gegliedert nach
+  Abschnitten («Entdecken», «Konzepte sichern», «Lernkontrolle»): grün = automatisch geprüft,
+  grau = selbst abgehakt, Ring = aktuelle Aufgabe, eckig = Lernkontrolle, ★ neben der Linie =
+  Zusatzaufgabe. Beim Darüberfahren erscheint der Titel. Auf dem Handy lassen sich beide Zeilen
+  waagrecht wischen.
+- **Übersicht** (Fenster): alle Reihen mit Abschnitten, Aufgaben, Stand und Balken; ein Klick
+  öffnet die Aufgabe.
+- **Aufgabenkarte:** Ort («2 · Wiederholen · Entdecken · 5 von 14»), Titel, «‹ Zurück / Weiter ›»
+  (durch alle Reihen; am Ende einer Reihe «Nächste Einheit ›»; weiterführende Reihen bilden je
+  einen eigenen Pfad), «Einklappen» (merkt sich der Browser). Darin Etiketten (★ Zusatzaufgabe,
+  Lernkontrolle, Konzepte zum Nachlesen), Text, Fragen, Checkliste, Bild, gestufte Hinweise,
   «Als erledigt markieren», «Link zum Teilen kopieren» (öffnet genau diese Aufgabe).
+- **Vorhersage** (`vorhersage: true`): ein Feld «Ihre Vorhersage». Ist es leer, hält «Start» beim
+  ersten Mal an und bietet «Vorhersage aufschreiben» oder «Ohne Vorhersage starten». Nach dem ersten
+  Start: «Stimmte Ihre Vorhersage? Ja / Teilweise / Nein». Text und Antwort bleiben im Browser.
+- **Lernkontrollen** zeigen einen Hinweis, solange die Pflichtaufgaben davor nicht erledigt sind
+  («Empfohlen, wenn …»), und sind im Pfad blasser. Mit `freigabe` (Anteil, z. B. 0.7) bei der Reihe
+  öffnen sie sich erst ab diesem Anteil; vorher lässt sich das Programm nur lesen.
 - **Konzepte** (Knopf oben): Erklärungen mit Beispielen, die zum Kurs gehören.
 - **Programm je Aufgabe:** Beim ersten Öffnen steht der Startcode da (oder bei `weiterVon` das
   eigene Programm der genannten Aufgabe). «Zurück zum Startcode» fragt zuerst. «Neu», «Beispiele»
@@ -167,8 +184,10 @@ kein Ziel; sie werden selbst abgehakt.
 ```
 
 Kurs: `format` (1), `titel`, optional `untertitel`, `konzepte`, `reihen` (1–30).
-Reihe: `id`, `titel`, optional `untertitel`, `weiterfuehrend: true` (abgesetzt hinter den
-übrigen, gestrichelt), `aufgaben` (1–80).
+Reihe: `id`, `titel`, optional `untertitel`, `kurz` (1–3 Zeichen im Kreis des Lernpfads; sonst
+die Zahl am Anfang des Titels oder sein erster Buchstabe), `weiterfuehrend: true` (gestrichelt,
+eigener Pfad), `freigabe` (0–1: Lernkontrollen erst ab diesem Anteil erledigter Aufgaben davor),
+`aufgaben` (1–80).
 
 | Feld der Aufgabe | Bedeutung |
 | --- | --- |
@@ -229,7 +248,7 @@ löschen, die länger nicht besucht wurden; wichtige Programme darum herunterlad
 | `turtle.programme.v1` | alle Programme und welches offen ist |
 | `turtle.tempo.v1` | Stellung des Tempo-Reglers |
 | `turtle.koordinaten.v1` | Koordinatensystem ein/aus |
-| `turtle.kurs.<kurs>.v1` | im Kurs: Programm je Aufgabe, erledigt (geprüft/selbst), zuletzt offene Aufgabe; `<kurs>` z. B. `turtle-aufgaben/beispiel` |
+| `turtle.kurs.<kurs>.v1` | im Kurs: Programm je Aufgabe, erledigt (geprüft/selbst), Vorhersagen, zuletzt offene Aufgabe, Karte eingeklappt; `<kurs>` z. B. `turtle-aufgaben/beispiel` |
 
 Kara, Checks und Turtle liegen unter `masta-nksa.github.io` und teilen sich den
 `localStorage`; die Präfixe `kara.` und `turtle.` halten sie auseinander.

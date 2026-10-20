@@ -19,10 +19,15 @@
     <span class="eyebrow">Turtle · Python programmieren</span>
     <h1>Turtle</h1>
     <p class="lead" id="lead">Schreiben Sie ein Python-Programm und lassen Sie die Turtle zeichnen. Läuft direkt im Browser, ohne Installation und ohne Anmeldung; Ihre Programme merkt sich nur dieser Browser.</p>
-    <p class="tu-kursleiste" id="kursLeiste" hidden>
-      <button type="button" class="bk-knopf" id="knopfKonzepte">Konzepte</button>
-      <a class="tu-frei" id="linkFrei" href="./">Ohne Kurs programmieren →</a>
-    </p>
+    <div class="tu-kursleiste" id="kursLeiste" hidden>
+      <button type="button" class="bk-knopf" id="knopfUebersicht" aria-haspopup="dialog">Übersicht</button>
+      <button type="button" class="bk-knopf tu-lang" id="knopfKonzepte" aria-haspopup="dialog">Konzepte</button>
+      <button type="button" class="bk-knopf" id="knopfMenue" aria-haspopup="menu" aria-expanded="false" aria-label="Weitere Befehle">⋯</button>
+      <div class="tu-menue" id="menue" role="menu" hidden>
+        <button type="button" role="menuitem" id="menueKonzepte">Konzepte</button>
+        <a role="menuitem" id="linkFrei" href="./">Ohne Kurs programmieren</a>
+      </div>
+    </div>
     <div class="pixelrule" id="pixelrule" aria-hidden="true"></div>
   </header>
 
@@ -30,15 +35,37 @@
 
   <div class="tu-kurs" id="kurs" hidden>
     <p class="bk-meldung fehler" id="kursFehler" role="alert" hidden></p>
-    <div class="bk-reihen" id="reihen" role="group" aria-label="Reihe"></div>
-    <nav class="bk-aufgaben" aria-label="Aufgaben"><ol id="aufgabenListe"></ol></nav>
+    <section class="bk-pfad" id="pfad" aria-label="Lernpfad" hidden>
+      <div class="bk-einheiten" id="einheiten" role="group" aria-label="Einheiten"></div>
+      <div class="bk-strecke" id="strecke"><div class="bk-abschnitte" id="abschnitte"></div></div>
+      <div class="bk-legende" aria-hidden="true">
+        <span><i class="g"></i>automatisch geprüft</span>
+        <span><i class="s"></i>selbst abgehakt</span>
+        <span><i class="a"></i>aktuelle Aufgabe</span>
+        <span><i class="k"></i>Lernkontrolle</span>
+        <span>★ Zusatzaufgabe</span>
+      </div>
+    </section>
 
     <section class="bk-aufgabe" id="aufgabe" aria-labelledby="aufgabeTitel" hidden>
-      <h2 id="aufgabeTitel"></h2>
+      <div class="tu-kartenkopf">
+        <h2 id="aufgabeTitel"><small id="aufgabeOrt"></small><span id="aufgabeName"></span></h2>
+        <div class="tu-navi">
+          <button type="button" class="bk-knopf" id="knopfZurueck">‹ Zurück</button>
+          <button type="button" class="bk-knopf" id="knopfWeiter">Weiter ›</button>
+        </div>
+        <button type="button" class="tu-einklappen" id="einklappen" aria-expanded="true" aria-controls="aufgabeInhalt">Einklappen ▴</button>
+      </div>
+      <div class="tu-karteninhalt" id="aufgabeInhalt">
+      <p class="tu-freigabe" id="freigabe" hidden></p>
       <p class="tu-etiketten" id="etiketten" hidden></p>
-      <p class="tu-vorhersage" id="vorhersage" hidden>Überlegen Sie zuerst, was dieses Programm zeichnet. Drücken Sie erst dann «Start».</p>
       <div class="tu-text" id="aufgabeText"></div>
       <ol class="tu-fragen" id="fragen" hidden></ol>
+      <div class="tu-vorhersage" id="vorhersage" hidden>
+        <label for="vorhersageText">Ihre Vorhersage: Was wird dieses Programm zeichnen? Schreiben Sie es auf, bevor Sie «Start» drücken.</label>
+        <textarea id="vorhersageText" rows="2" spellcheck="true"></textarea>
+        <div class="tu-vergleich" id="vergleich" role="group" aria-label="Stimmte Ihre Vorhersage?"></div>
+      </div>
       <ul class="tu-checkliste" id="checkliste" hidden></ul>
       <img class="tu-bild" id="aufgabeBild" alt="" hidden>
       <p class="tu-weiter" id="weiterHinweis" hidden></p>
@@ -55,6 +82,7 @@
         <button type="button" class="bk-knopf" id="aufgabeTeilen">Link zum Teilen kopieren</button>
         <input type="text" class="bk-ch-link" id="aufgabeLink" readonly hidden aria-label="Link zur Aufgabe">
         <p class="bk-ch-meldung" id="aufgabeMeldung" role="status" aria-live="polite" hidden></p>
+      </div>
       </div>
     </section>
   </div>
@@ -162,6 +190,16 @@
     <button type="button" class="bk-knopf" id="importNein">Ablehnen</button>
   </div>
 </dialog>
+
+<dialog class="bk-bild tu-dialog tu-uebersicht" id="uebersichtDialog" aria-labelledby="uebersichtTitel">
+  <div class="tu-dialogkopf">
+    <h2 id="uebersichtTitel">Übersicht</h2>
+    <button type="button" class="bk-knopf" id="uebersichtZu">Schliessen</button>
+  </div>
+  <div class="tu-ue-gitter" id="uebersichtGitter"></div>
+</dialog>
+
+<div class="bk-schild" id="schild" aria-hidden="true" hidden></div>
 
 <dialog class="bk-bild tu-dialog tu-konzepte" id="konzepteDialog" aria-labelledby="konzepteTitel">
   <h2 id="konzepteTitel">Konzepte</h2>

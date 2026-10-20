@@ -183,21 +183,8 @@ body[data-vollbild="feld"] .tu-seite{min-height:0;overflow:auto}
 /* ---------- Kursmodus ---------- */
 .tu-kurs{display:flex;flex-direction:column;gap:12px;min-width:0}
 .tu-kurs[hidden],.bk-aufgabe[hidden],.tu-kursleiste[hidden]{display:none}
-.tu-kursleiste{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin:0}
-.tu-frei{color:var(--accent);font-size:.92rem}
 .im-kurs .tu-kopf,.im-kurs #knopfNeu,.im-kurs #knopfProgramme{display:none}
 #knopfStartcode[hidden]{display:none}
-.tu-reihen-trenner{align-self:center;font-size:.8rem;color:var(--ink-soft);margin-left:6px}
-.bk-reihe .tu-stand{margin-left:8px;font-weight:400;color:var(--ink-soft)}
-.bk-reihe .tu-stand:empty{display:none}
-.bk-reihe.tu-weiterfuehrend{border-style:dashed}
-.bk-aufgaben .tu-abschnitt{
-  flex-basis:100%;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.72rem;letter-spacing:.1em;
-  text-transform:uppercase;color:var(--ink-soft);margin:4px 0 -2px;
-}
-.bk-aufgaben li:first-child.tu-abschnitt{margin-top:0}
-.bk-tab .haken.selbst{color:var(--ink-soft)}
-
 .tu-etiketten{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}
 .tu-etiketten[hidden]{display:none}
 .tu-etikett{
@@ -209,8 +196,7 @@ body[data-vollbild="feld"] .tu-seite{min-height:0;overflow:auto}
 button.tu-etikett{cursor:pointer;color:var(--accent);min-height:28px}
 button.tu-etikett:hover{background:var(--accent-soft)}
 button.tu-etikett:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-.tu-vorhersage{margin:0 0 8px !important;padding:6px 10px;border-left:3px solid var(--accent);background:var(--accent-soft);font-size:.92rem}
-.tu-vorhersage[hidden],.tu-fragen[hidden],.tu-checkliste[hidden],.tu-bild[hidden],.tu-weiter[hidden]{display:none}
+.tu-fragen[hidden],.tu-checkliste[hidden],.tu-bild[hidden],.tu-weiter[hidden]{display:none}
 .tu-text p{margin:0 0 8px}
 .tu-text p:last-child{margin-bottom:0}
 .tu-text ul{margin:0 0 8px;padding-left:1.3em}
@@ -254,8 +240,143 @@ body[data-vollbild] .tu-kurs{display:none}
 .tu-text h4:first-child{margin-top:0}
 .tu-tipptext{padding:2px 0 6px}
 .tu-tipptext + .tu-tipptext{border-top:1px dashed var(--line);padding-top:8px}
-@media (max-width:560px){
-  .bk-reihen{flex-wrap:nowrap;overflow-x:auto;padding-bottom:6px}
-  .bk-reihe,.tu-reihen-trenner{white-space:nowrap;flex:none}
-  .bk-aufgaben .tu-abschnitt{flex:none;align-self:center;margin:0 2px}
+
+
+/* ---------- Kursmodus: schmaler Kopf ---------- */
+.im-kurs .bk-kopf-seite{flex-direction:row;flex-wrap:wrap;align-items:center;gap:8px 16px}
+.im-kurs .bk-kopf-seite .eyebrow{flex:none}
+.im-kurs .bk-kopf-seite h1{flex:1 1 240px;min-width:0;margin:0;font-size:1.15rem;line-height:1.3;text-wrap:balance}
+.im-kurs .bk-kopf-seite .lead,.im-kurs .pixelrule{display:none}
+.tu-kursleiste{display:flex;gap:8px;position:relative;flex:none}
+.tu-kursleiste[hidden]{display:none}
+.tu-kursleiste .bk-knopf{min-height:40px;padding:6px 14px}
+.tu-menue{
+  position:absolute;right:0;top:calc(100% + 6px);z-index:20;min-width:240px;display:flex;flex-direction:column;padding:6px;
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 8px 28px rgba(0,0,0,.18);
+}
+.tu-menue[hidden]{display:none}
+.tu-menue button,.tu-menue a{
+  font:inherit;font-size:.9rem;text-align:left;color:var(--ink);text-decoration:none;background:none;border:0;
+  padding:9px 10px;border-radius:var(--radius);cursor:pointer;min-height:40px;display:flex;align-items:center;
+}
+.tu-menue button:hover,.tu-menue a:hover{background:var(--accent-soft)}
+.tu-menue button:focus-visible,.tu-menue a:focus-visible{outline:3px solid var(--accent);outline-offset:-1px}
+.tu-menue [hidden]{display:none}
+
+/* ---------- Lernpfad (bk-…: auch für Kara gedacht) ---------- */
+.bk-pfad{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px 16px 12px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.bk-pfad[hidden]{display:none}
+.bk-einheiten{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.bk-einheit{position:relative;flex:none;width:38px;height:38px;padding:0;border:0;background:none;cursor:pointer;border-radius:50%}
+.bk-einheit svg{display:block;width:38px;height:38px}
+.bk-einheit .grund{fill:var(--surface);stroke:var(--line);stroke-width:3}
+.bk-einheit .ring{fill:none;stroke:var(--ok);stroke-width:3;stroke-linecap:round;transform:rotate(-90deg);transform-origin:50% 50%}
+.bk-einheit span{position:absolute;inset:0;display:grid;place-items:center;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.82rem;font-weight:600;color:var(--ink-soft)}
+.bk-einheit[aria-current="true"] .grund{fill:var(--accent-soft);stroke:var(--accent)}
+.bk-einheit[aria-current="true"] span{color:var(--ink)}
+.bk-einheit.weiter .grund{stroke-dasharray:3 3}
+.bk-einheit:focus-visible,.bk-station:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.bk-einheit-titel{margin-left:8px;flex:1 1 220px;min-width:0;display:flex;align-items:baseline;gap:4px 12px;flex-wrap:wrap}
+.bk-einheit-titel b{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.95rem}
+.bk-einheit-titel small{color:var(--ink-soft);font-size:.82rem}
+.bk-stand{margin-left:auto;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.85rem;color:var(--ink-soft);font-variant-numeric:tabular-nums;white-space:nowrap}
+.bk-strecke{overflow-x:auto;padding:2px 2px 2px;scrollbar-width:thin}
+.bk-abschnitte{display:flex;gap:26px;width:max-content;min-width:100%}
+.bk-abschnitt{display:flex;flex-direction:column;gap:4px}
+.bk-abschnitt-name{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);white-space:nowrap;min-height:1.2em}
+.bk-halte{position:relative;display:flex;align-items:flex-end;gap:14px;height:48px;padding:16px 4px 2px}
+.bk-halte::before{content:"";position:absolute;left:14px;right:14px;bottom:13px;height:2px;background:var(--line)}
+.bk-station{
+  position:relative;z-index:1;flex:none;width:24px;height:24px;padding:0;border-radius:50%;cursor:pointer;
+  border:2px solid var(--ink-soft);background:var(--surface);display:grid;place-items:center;
+  font:700 .72rem/1 "IBM Plex Sans",sans-serif;color:var(--surface);
+}
+.bk-station.kontrolle{border-radius:5px}
+.bk-station.geprueft{background:var(--ok);border-color:var(--ok)}
+.bk-station.selbst{background:var(--ink-soft);border-color:var(--ink-soft);opacity:.75}
+.bk-station.aktuell{box-shadow:0 0 0 3px var(--surface),0 0 0 5px var(--accent)}
+.bk-station.spaeter:not(.aktuell){opacity:.5}
+.bk-station.gesperrt{border-style:dotted;opacity:.5}
+.bk-station.gesperrt::after{content:"";position:absolute;width:8px;height:6px;border-radius:1px;background:var(--ink-soft);bottom:5px}
+.bk-station.zusatz{width:20px;height:20px;align-self:flex-start;margin-top:-14px;border-style:dashed}
+.bk-station.zusatz::after{content:"★";position:absolute;inset:0;display:grid;place-items:center;font-size:.7rem;color:var(--ink-soft)}
+.bk-station.zusatz.geprueft::after,.bk-station.zusatz.selbst::after{color:var(--surface)}
+.bk-station.zusatz::before{content:"";position:absolute;left:50%;top:100%;height:14px;border-left:2px dashed var(--line)}
+.bk-schild{
+  position:fixed;z-index:30;pointer-events:none;transform:translate(-50%,-100%);white-space:nowrap;
+  padding:3px 8px;border-radius:var(--radius);font-size:.8rem;background:var(--ink);color:var(--surface);
+}
+.bk-schild[hidden]{display:none}
+.bk-legende{display:flex;flex-wrap:wrap;gap:2px 16px;font-size:.75rem;color:var(--ink-soft)}
+.bk-legende span{display:inline-flex;align-items:center;gap:6px}
+.bk-legende i{display:inline-block;width:12px;height:12px;border-radius:50%;border:2px solid var(--ink-soft);background:var(--surface)}
+.bk-legende i.g{background:var(--ok);border-color:var(--ok)}
+.bk-legende i.s{background:var(--ink-soft);opacity:.75}
+.bk-legende i.a{box-shadow:0 0 0 2px var(--surface),0 0 0 3.5px var(--accent)}
+.bk-legende i.k{border-radius:3px}
+
+/* ---------- Aufgabenkarte ---------- */
+.tu-kartenkopf{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tu-kartenkopf h2{flex:1 1 220px;min-width:0;margin:0 !important;font-size:1.02rem;text-wrap:balance}
+.tu-kartenkopf h2 small{display:block;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);font-weight:400}
+.tu-navi{display:flex;gap:6px}
+.tu-navi .bk-knopf,.bk-knopf.tu-klein{min-height:36px;padding:4px 12px;font-size:.85rem}
+.tu-einklappen{font:inherit;font-size:.82rem;color:var(--ink-soft);background:none;border:0;cursor:pointer;min-height:36px;padding:4px 6px}
+.tu-einklappen:hover{color:var(--accent)}
+.tu-einklappen:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.tu-karteninhalt{margin-top:10px}
+.bk-aufgabe.zu .tu-karteninhalt{display:none}
+.tu-freigabe{margin:0 0 10px !important;padding:6px 10px;font-size:.9rem;border-left:3px solid var(--line);background:var(--ground);color:var(--ink-soft)}
+.tu-freigabe.gesperrt{border-left-color:var(--no);background:var(--no-soft);color:var(--ink)}
+.tu-freigabe[hidden],.tu-vorhersage[hidden]{display:none}
+.tu-vorhersage{display:flex;flex-direction:column;gap:6px;margin:10px 0 0;padding:8px 10px;border-left:3px solid var(--accent);background:var(--accent-soft)}
+.tu-vorhersage label{font-size:.92rem}
+.tu-vorhersage textarea{
+  width:100%;min-height:3.2em;resize:vertical;font:inherit;font-size:.92rem;padding:6px 8px;
+  color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+}
+.tu-vorhersage textarea:focus-visible{outline:3px solid var(--accent);outline-offset:1px}
+.tu-vergleich{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;min-height:36px;font-size:.88rem;color:var(--ink-soft)}
+.tu-vergleich .bk-knopf[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.tu-knoepfe{display:flex;flex-wrap:wrap;gap:8px}
+
+/* ---------- Übersicht ---------- */
+.tu-uebersicht{width:min(94vw,1000px);max-height:88vh;max-height:88dvh;padding:0;overflow:auto}
+.tu-dialogkopf{position:sticky;top:0;z-index:1;display:flex;align-items:center;gap:12px;padding:12px 18px;background:var(--surface);border-bottom:1px solid var(--line)}
+.tu-dialogkopf h2{margin:0 !important;flex:1}
+.tu-ue-gitter{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;padding:16px 18px 20px}
+.tu-ue-einheit{border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.tu-ue-einheit.aktuell{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.tu-ue-einheit.weiter{border-style:dashed}
+.tu-ue-einheit h3{margin:0;display:flex;justify-content:space-between;gap:8px;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.9rem}
+.tu-ue-stand{color:var(--ink-soft);font-weight:400;font-variant-numeric:tabular-nums}
+.tu-ue-unter{margin:0;font-size:.8rem;color:var(--ink-soft)}
+.tu-balken{height:6px;overflow:hidden;background:var(--ground);border:1px solid var(--line);border-radius:3px}
+.tu-balken i{display:block;height:100%;background:var(--ok)}
+.tu-ue-abschnitt{margin-top:4px;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft)}
+.tu-ue-liste{list-style:none;margin:0;padding:0}
+.tu-ue-aufgabe{
+  width:100%;display:flex;align-items:center;gap:8px;padding:3px 4px;border:0;border-radius:var(--radius);
+  font:inherit;font-size:.88rem;text-align:left;color:var(--ink);background:none;cursor:pointer;min-height:30px;
+}
+.tu-ue-aufgabe:hover{background:var(--accent-soft)}
+.tu-ue-aufgabe:focus-visible{outline:3px solid var(--accent);outline-offset:-1px}
+.tu-ue-aufgabe[aria-current="true"]{background:var(--accent-soft);font-weight:600}
+.tu-ue-aufgabe i{flex:none;width:12px;height:12px;border-radius:50%;border:2px solid var(--ink-soft)}
+.tu-ue-aufgabe i.k{border-radius:3px}
+.tu-ue-aufgabe i.g{background:var(--ok);border-color:var(--ok)}
+.tu-ue-aufgabe i.s{background:var(--ink-soft);opacity:.75}
+.tu-ue-aufgabe em{font-style:normal;font-size:.78em;color:var(--ink-soft)}
+
+@media (max-width:640px){
+  .bk-einheiten{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}
+  .bk-einheit-titel{display:none}
+  .bk-stand{margin-left:8px}
+  .tu-kursleiste .tu-lang{display:none}
+  .tu-menue{right:auto;left:0}
+  .bk-pfad{padding:10px 12px}
+  .bk-legende{display:none}
+}
+@media (prefers-reduced-motion:no-preference){
+  .bk-station{transition:box-shadow .15s,background .15s}
 }

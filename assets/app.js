@@ -317,7 +317,7 @@
 
   // zustand: "bereit" | "laeuft" | "spiel" | "pause" | "eingabe" | "fertig" | "fehler"
   // «spiel»: Das Hauptprogramm ist durch, Tasten, Klicks oder ein Timer halten es am Laufen.
-  var rahmen = null, zustand = "bereit", fehlerZeile = null, spielt = false;
+  var rahmen = null, zustand = "bereit", fehlerZeile = null, spielt = false, gesperrt = false;
 
   var ZUSTAND_TEXT = {
     bereit: "Bereit.", laeuft: "Läuft …", pause: "Pausiert.",
@@ -329,7 +329,7 @@
     $("zustand").textContent = ZUSTAND_TEXT[z];
     var st = $("knopfStart");
     st.textContent = (z === "laeuft" || z === "eingabe" || z === "spiel") ? "Pause" : (z === "pause" ? "Weiter" : "Start");
-    st.disabled = z === "eingabe";
+    st.disabled = z === "eingabe" || gesperrt;
   }
 
   function faktor() { return TEMPO[Number($("tempo").value) - 1] || 1; }
@@ -388,7 +388,10 @@
     return laufzeitText;
   }
 
-  function neuStarten() {
+  // ohne = true: den Haken vorStart übergehen (z. B. «Ohne Vorhersage starten»)
+  function neuStarten(ohne) {
+    if (gesperrt) return;
+    if (ohne !== true && hooks.vorStart && hooks.vorStart() === false) return;
     if (speicherTimer) sofortSpeichern();
     zuruecksetzen();
     var code = editor.getValue();
@@ -732,6 +735,14 @@
     kurs: KURS, kursFehler: kursFehler, editor: editor, hooks: hooks,
     programmLaden: programmLaden, freiStarten: freiStarten, zuruecksetzen: zuruecksetzen,
     sofortSpeichern: function () { if (speicherTimer) sofortSpeichern(); },
+    starten: function () { neuStarten(true); },
+    // Kursmodus: gesperrte Aufgabe (Programm nur lesen, kein Start)
+    sperren: function (an) {
+      gesperrt = !!an;
+      editor.setOption("readOnly", gesperrt);
+      $("knopfStartcode").disabled = gesperrt;
+      setzeZustand(zustand);
+    },
     vorlage: function (svg) { vorlageSvg = svg || ""; rasterZeichnen(); },
     farbeText: farbeText
   };

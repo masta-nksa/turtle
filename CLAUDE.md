@@ -42,8 +42,9 @@ Playwright mit Chromium unter `/opt/pw-browsers/chromium`; Testskripte nur im Sc
 Bewährt: Start/Pause/Weiter, Tempo während des Laufs umstellen, Endlosschleife pausieren,
 `input()`, Fehlerzeile, Neuladen (Programm und Tempo bleiben), Teilen-Link in zweitem Kontext,
 kaputter Link, Kursmodus (Server im Ordner über `turtle/` und `turtle-aufgaben/`, z. B. ein
-Scratchpad-Ordner mit Symlinks auf beide Repos; Prüfung, Selbst-Abhaken, `weiterVon`, Neuladen,
-kaputter oder fehlender Kurs, Kurs offline), Spiel mit `onkey`/`ontimer` (Tasten ohne Klick,
+Scratchpad-Ordner mit Symlinks auf beide Repos; Lernpfad, Weiter/Zurück, Übersicht, Einklappen,
+Vorhersage mit «Ohne Vorhersage starten», Freigabe weich und mit `freigabe`, Prüfung,
+Selbst-Abhaken, `weiterVon`, Neuladen, kaputter oder fehlender Kurs, Kurs offline), Spiel mit `onkey`/`ontimer` (Tasten ohne Klick,
 Pause), `pruefung.js` und `kurs.js` direkt mit node, Handy-Breite (kein horizontales Scrollen), Hell/Dunkel, Zoom beim Verlassen des
 Feldes, Koordinatensystem, Zeiger-Koordinaten (gezoomt mit `onscreenclick` vergleichen), Vollbild Programm/Feld
 (Desktop, iPad quer/hoch, Handy: Feld ganz sichtbar, kein Scrollen der Seite), Fehlermeldungen (`fehlerhilfe.js` direkt mit node prüfen), offline

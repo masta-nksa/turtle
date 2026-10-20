@@ -176,6 +176,13 @@
         weiterfuehrend: janein(r.weiterfuehrend, wo + ", weiterfuehrend"),
         aufgaben: []
       };
+      // kurz: Beschriftung im Lernpfad (sonst Nummer am Anfang des Titels bzw. erster Buchstabe)
+      if (r.kurz !== undefined) {
+        if (typeof r.kurz !== "string" || !/^\S{1,3}$/.test(r.kurz)) throw Fehler(wo, "«kurz» hat 1 bis 3 Zeichen.");
+        reihe.kurz = r.kurz;
+      }
+      // freigabe: Lernkontrollen öffnen sich erst ab diesem Anteil erledigter Aufgaben davor
+      if (r.freigabe !== undefined) reihe.freigabe = zahlPruefen(r.freigabe, wo + ", freigabe", 0, 1);
       if (reiheIds[reihe.id]) throw Fehler(wo, "die id «" + reihe.id + "» kommt doppelt vor.");
       reiheIds[reihe.id] = true;
       if (!Array.isArray(r.aufgaben) || !r.aufgaben.length || r.aufgaben.length > MAX.aufgaben)

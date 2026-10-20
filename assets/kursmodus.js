@@ -1,9 +1,10 @@
 /* ============================================================
-   kursmodus.js – Kurs mit Reihen und Aufgaben (?kurs=…), Bedienung wie in Kara.
-   Kursdaten (kurs.js) erscheinen nur als Text. Jede Aufgabe hat ihr eigenes Programm;
-   Fortschritt und Programme bleiben im Browser (turtle.kurs.<kurs>.v1).
-   Erledigt ist eine Aufgabe, wenn die Zeichnung zum Zielbild passt (pruefung.js) oder
-   wenn sie selbst abgehakt ist; beides wird getrennt gespeichert und angezeigt.
+   kursmodus.js – Kurs mit Reihen (Einheiten) und Aufgaben (?kurs=…).
+   Lernpfad: Einheiten als Kreise mit Fortschritt, Aufgaben als Stationen einer Linie,
+   die ganze Liste im Fenster «Übersicht». Kursdaten (kurs.js) erscheinen nur als Text.
+   Jede Aufgabe hat ihr eigenes Programm; Fortschritt, Programme und Vorhersagen bleiben im
+   Browser (turtle.kurs.<kurs>.v1). Erledigt ist eine Aufgabe, wenn die Zeichnung zum Zielbild
+   passt (pruefung.js) oder wenn sie selbst abgehakt ist; beides wird getrennt gespeichert.
    ============================================================ */
 (function () {
   "use strict";
@@ -23,7 +24,7 @@
 
   function fehlerZeigen(text) {
     $("kurs").hidden = false;
-    $("reihen").hidden = true;
+    $("pfad").hidden = true;
     var f = $("kursFehler");
     f.textContent = text + " Sie können ohne Kurs weiter programmieren.";
     f.hidden = false;
@@ -36,13 +37,14 @@
 
   /* ---------- Speicher ---------------------------------------- */
 
-  var st = { programme: {}, erledigt: {}, offen: null };
+  // vorhersagen: {id: {t: Text, l: 1 = schon gestartet, s: "ja"|"teilweise"|"nein"}}; zu: Karte eingeklappt
+  var st = { programme: {}, erledigt: {}, vorhersagen: {}, offen: null, zu: false };
   try {
     var d = JSON.parse(localStorage.getItem(SPEICHER) || "null");
     if (d && typeof d === "object") {
-      if (d.programme && typeof d.programme === "object") st.programme = d.programme;
-      if (d.erledigt && typeof d.erledigt === "object") st.erledigt = d.erledigt;
+      ["programme", "erledigt", "vorhersagen"].forEach(function (k) { if (d[k] && typeof d[k] === "object") st[k] = d[k]; });
       if (d.offen && typeof d.offen === "object") st.offen = d.offen;
+      st.zu = d.zu === true;
     }
   } catch (e) { /* ohne gespeicherten Stand */ }
   function speichern() {
@@ -121,22 +123,24 @@
   function aufbauen() {
     $("kurs").hidden = false;
     $("kursLeiste").hidden = false;
+    $("pfad").hidden = false;
     $("aufgabe").hidden = false;
     $("linkFrei").href = location.pathname;
     document.querySelector(".bk-kopf-seite .eyebrow").textContent = "Turtle · Kurs";
     document.querySelector(".bk-kopf-seite h1").textContent = kurs.titel;
-    $("lead").textContent = kurs.untertitel ||
-      "Lösen Sie die Aufgaben mit Python und der Turtle. Ihre Programme und Ihr Fortschritt bleiben nur in diesem Browser.";
     document.title = kurs.titel + " · Turtle";
-    $("knopfKonzepte").hidden = !kurs.konzepte.length;
+    $("knopfKonzepte").hidden = $("menueKonzepte").hidden = !kurs.konzepte.length;
     $("knopfTeilen").textContent = "Programm als Link kopieren";   // «Link zum Teilen kopieren» gilt der Aufgabe
-    baueReihen();
+    kurs.reihen.forEach(function (r) { r.aufgaben.forEach(function (a) { a.reiheObj = r; }); });
     bilderAblegen();
 
     var such = new URLSearchParams(location.search), wahl = alle[such.get("aufgabe")];
     if (!wahl && st.offen) wahl = alle[st.offen.aufgabe];
-    var r = kurs.reihen.filter(function (x) { return wahl ? x.id === wahl.reihe : x.id === such.get("reihe"); })[0] || kurs.reihen[0];
-    zeigeReihe(r, wahl && wahl.reihe === r.id ? wahl : null);
+    if (!wahl) {
+      var r = kurs.reihen.filter(function (x) { return x.id === such.get("reihe"); })[0] || kurs.reihen[0];
+      wahl = r.aufgaben[0];
+    }
+    waehleAufgabe(wahl);
   }
 
   // Bilder für den Offline-Betrieb ablegen (gleich wie kurs.json)
@@ -149,68 +153,141 @@
     }).catch(function () {});
   }
 
-  /* ---------- Reihen und Aufgaben-Reiter ----------------------- */
+  /* ---------- Lernpfad: Einheiten und Stationen ---------------- */
 
   function pflicht(r) { return r.aufgaben.filter(function (a) { return !a.zusatz; }); }
   function fertig(a) { var e = erledigt(a); return !!(e.g || e.s); }
+  function stand(r) { var p = pflicht(r); return { n: p.filter(fertig).length, von: p.length }; }
+  function kurzname(r, i) {
+    if (r.kurz) return r.kurz;
+    var m = /^\d+/.exec(r.titel);
+    return m ? m[0] : r.titel.charAt(0).toUpperCase() || String(i + 1);
+  }
 
-  function baueReihen() {
-    var box = $("reihen"), trenner = false;
+  // Lernkontrolle: empfohlen, wenn die Pflichtaufgaben davor erledigt sind; mit «freigabe»
+  // (Anteil) der Reihe erst ab diesem Anteil offen.
+  function freigabe(a) {
+    if (!a.kontrolle) return null;
+    var vorher = a.reiheObj.aufgaben.filter(function (x) { return !x.zusatz && !x.kontrolle; });
+    if (!vorher.length) return null;
+    var n = vorher.filter(fertig).length, f = a.reiheObj.freigabe;
+    if (n >= vorher.length) return null;
+    return { n: n, von: vorher.length, gesperrt: f !== undefined && n < Math.ceil(f * vorher.length), anteil: f };
+  }
+
+  function einheitenZeigen() {
+    var box = $("einheiten"), U = 2 * Math.PI * 16;
     box.textContent = "";
-    kurs.reihen.forEach(function (r) {
-      if (r.weiterfuehrend && !trenner) { box.append(el("span", "tu-reihen-trenner", "Weiterführend:")); trenner = true; }
-      var b = el("button", "bk-reihe" + (r.weiterfuehrend ? " tu-weiterfuehrend" : ""));
+    kurs.reihen.forEach(function (r, i) {
+      var s = stand(r), anteil = s.von ? s.n / s.von : 0;
+      var b = el("button", "bk-einheit" + (r.weiterfuehrend ? " weiter" : ""));
       b.type = "button";
-      b.dataset.id = r.id;
-      if (r.untertitel) b.title = r.untertitel;
-      b.append(el("span", null, r.titel), el("span", "tu-stand"));
-      b.addEventListener("click", function () { if (r !== reihe) zeigeReihe(r); });
+      b.setAttribute("aria-current", r === aufg.reiheObj ? "true" : "false");
+      b.dataset.titel = (r.weiterfuehrend ? "Weiterführend: " : "") + r.titel + " · " + s.n + "/" + s.von;
+      b.setAttribute("aria-label", r.titel + ", " + s.n + " von " + s.von + " erledigt");
+      b.innerHTML = '<svg viewBox="0 0 38 38" aria-hidden="true"><circle class="grund" cx="19" cy="19" r="16"/>' +
+        (anteil ? '<circle class="ring" cx="19" cy="19" r="16" stroke-dasharray="' + (U * anteil).toFixed(1) + " " + U.toFixed(1) + '"/>' : "") + "</svg>";
+      b.append(el("span", null, kurzname(r, i)));
+      b.addEventListener("click", function () {
+        if (r === aufg.reiheObj) return;
+        var offen = r.aufgaben.filter(function (x) { return !x.zusatz && !fertig(x); })[0];
+        waehleAufgabe(offen || r.aufgaben[0]);
+      });
+      schildAn(b);
       box.append(b);
     });
-  }
-  function reihenAktualisieren() {
-    Array.prototype.forEach.call($("reihen").querySelectorAll(".bk-reihe"), function (b) {
-      var r = kurs.reihen.filter(function (x) { return x.id === b.dataset.id; })[0], p = pflicht(r);
-      var n = p.filter(fertig).length;
-      b.setAttribute("aria-pressed", r === reihe ? "true" : "false");
-      b.querySelector(".tu-stand").textContent = p.length ? n + "/" + p.length : "";
-      b.setAttribute("aria-label", r.titel + (p.length ? ", " + n + " von " + p.length + " erledigt" : ""));
-    });
+    var r = aufg.reiheObj, s = stand(r), t = el("div", "bk-einheit-titel");
+    t.append(el("b", null, r.titel));
+    if (r.untertitel) t.append(el("small", null, r.untertitel));
+    box.append(t, el("span", "bk-stand", s.n + " / " + s.von + " erledigt"));
   }
 
-  function zeigeReihe(r, a) {
-    reihe = r;
-    var ol = $("aufgabenListe"), abschnitt = null;
-    ol.textContent = "";
-    r.aufgaben.forEach(function (x) {
-      if (x.abschnitt && x.abschnitt !== abschnitt) {
-        ol.append(el("li", "tu-abschnitt", x.abschnitt));
-      }
-      abschnitt = x.abschnitt || abschnitt;
-      var li = el("li"), b = el("button", "bk-tab");
-      b.type = "button";
-      b.dataset.id = x.id;
-      b.append(el("span", null, (x.zusatz ? "★ " : "") + x.titel), el("span", "haken"));
-      b.addEventListener("click", function () { waehleAufgabe(x); });
-      li.append(b);
-      ol.append(li);
+  function stationenZeigen() {
+    var box = $("abschnitte"), gruppen = [], aktuell = null;
+    box.textContent = "";
+    aufg.reiheObj.aufgaben.forEach(function (a) {
+      var g = gruppen[gruppen.length - 1];
+      if (!g || (a.abschnitt && a.abschnitt !== g.name)) gruppen.push(g = { name: a.abschnitt || (g ? g.name : ""), liste: [] });
+      g.liste.push(a);
     });
-    reihenAktualisieren();
-    waehleAufgabe(a || r.aufgaben[0]);
+    gruppen.forEach(function (g) {
+      var ab = el("div", "bk-abschnitt"), halte = el("div", "bk-halte");
+      ab.append(el("div", "bk-abschnitt-name", g.name));
+      g.liste.forEach(function (a) {
+        var e = erledigt(a), fg = freigabe(a);
+        var b = el("button", "bk-station" + (a.zusatz ? " zusatz" : "") + (a.kontrolle ? " kontrolle" : "") +
+          (e.g ? " geprueft" : e.s ? " selbst" : "") + (fg ? (fg.gesperrt ? " gesperrt" : " spaeter") : ""));
+        b.type = "button";
+        if ((e.g || e.s) && !a.zusatz) b.textContent = "✓";
+        var zustandText = e.g ? "automatisch geprüft" : e.s ? "selbst abgehakt" : fg && fg.gesperrt ? "noch gesperrt" : "";
+        b.dataset.titel = (a.zusatz ? "★ " : "") + a.titel + (zustandText ? " · " + zustandText : "");
+        b.setAttribute("aria-label", b.dataset.titel + (a.kontrolle ? ", Lernkontrolle" : ""));
+        if (a === aufg) { b.classList.add("aktuell"); b.setAttribute("aria-current", "step"); aktuell = b; }
+        b.addEventListener("click", function () { waehleAufgabe(a); });
+        schildAn(b);
+        halte.append(b);
+      });
+      ab.append(halte);
+      box.append(ab);
+    });
+    if (aktuell) {
+      var s = $("strecke"), l = aktuell.offsetLeft - s.clientWidth / 2;
+      if (aktuell.offsetLeft < s.scrollLeft || aktuell.offsetLeft > s.scrollLeft + s.clientWidth - 30) s.scrollLeft = Math.max(0, l);
+    }
   }
 
-  function tabsAktualisieren() {
-    Array.prototype.forEach.call($("aufgabenListe").querySelectorAll(".bk-tab"), function (b) {
-      var x = alle[b.dataset.id], e = erledigt(x), h = b.querySelector(".haken");
-      b.setAttribute("aria-current", x === aufg ? "true" : "false");
-      h.textContent = e.g || e.s ? "✓" : "";
-      h.classList.toggle("selbst", !e.g && !!e.s);
-      b.title = e.g ? "Automatisch geprüft" : e.s ? "Selbst abgehakt" : "";
-      b.setAttribute("aria-label", x.titel + (x.zusatz ? ", Zusatzaufgabe" : "") +
-        (e.g ? ", automatisch geprüft" : e.s ? ", selbst abgehakt" : ""));
-    });
-    reihenAktualisieren();
+  function pfadZeigen() { einheitenZeigen(); stationenZeigen(); }
+
+  // Titel als Schild über Station oder Einheit (Maus und Tastatur)
+  var schild = $("schild");
+  function schildAn(b) {
+    function zeigen() {
+      var r = b.getBoundingClientRect();
+      schild.textContent = b.dataset.titel;
+      schild.hidden = false;
+      var w = schild.offsetWidth, x = Math.min(Math.max(r.left + r.width / 2, w / 2 + 8), innerWidth - w / 2 - 8);
+      schild.style.left = x + "px";
+      schild.style.top = (r.top - 8) + "px";
+    }
+    function weg() { schild.hidden = true; }
+    b.addEventListener("mouseenter", zeigen);
+    b.addEventListener("focus", zeigen);
+    b.addEventListener("mouseleave", weg);
+    b.addEventListener("blur", weg);
   }
+  addEventListener("scroll", function () { schild.hidden = true; }, true);
+
+  /* ---------- Reihenfolge: Zurück und Weiter -------------------- */
+
+  // Der Pfad läuft durch alle Reihen; weiterführende Reihen bilden je einen eigenen Pfad.
+  function pfadListe(a) {
+    var r = a.reiheObj;
+    if (r.weiterfuehrend) return r.aufgaben;
+    var l = [];
+    kurs.reihen.forEach(function (x) { if (!x.weiterfuehrend) l = l.concat(x.aufgaben); });
+    return l;
+  }
+  function nachbar(schritt) {
+    var l = pfadListe(aufg), i = l.indexOf(aufg) + schritt;
+    return i >= 0 && i < l.length ? l[i] : null;
+  }
+  function naviZeigen() {
+    var z = nachbar(-1), w = nachbar(1);
+    $("knopfZurueck").disabled = !z;
+    $("knopfWeiter").disabled = !w;
+    $("knopfWeiter").textContent = w && w.reiheObj !== aufg.reiheObj ? "Nächste Einheit ›" : "Weiter ›";
+    $("knopfZurueck").title = z ? z.titel : "";
+    $("knopfWeiter").title = w ? w.titel : "";
+  }
+  $("knopfZurueck").addEventListener("click", function () { var z = nachbar(-1); if (z) waehleAufgabe(z); });
+  $("knopfWeiter").addEventListener("click", function () { var w = nachbar(1); if (w) waehleAufgabe(w); });
+
+  function einklappenZeigen() {
+    $("aufgabe").classList.toggle("zu", st.zu);
+    $("einklappen").textContent = st.zu ? "Aufklappen ▾" : "Einklappen ▴";
+    $("einklappen").setAttribute("aria-expanded", st.zu ? "false" : "true");
+  }
+  $("einklappen").addEventListener("click", function () { st.zu = !st.zu; speichern(); einklappenZeigen(); });
 
   /* ---------- Eine Aufgabe ------------------------------------ */
 
@@ -239,12 +316,17 @@
   function waehleAufgabe(a) {
     A.sofortSpeichern();
     aufg = a;
+    reihe = a.reiheObj;
     st.offen = { reihe: reihe.id, aufgabe: a.id };
     speichern();
 
-    $("aufgabeTitel").textContent = a.titel;
+    var i = reihe.aufgaben.indexOf(a);
+    $("aufgabeOrt").textContent = reihe.titel + (a.abschnitt || abschnittVon(a) ? " · " + (a.abschnitt || abschnittVon(a)) : "") +
+      " · " + (i + 1) + " von " + reihe.aufgaben.length;
+    $("aufgabeName").textContent = (a.zusatz ? "★ " : "") + a.titel;
     etikettenZeigen(a);
-    $("vorhersage").hidden = !a.vorhersage;
+    freigabeZeigen(a);
+    vorhersageZeigen(a);
     textZeigen($("aufgabeText"), a.text);
     listeZeigen($("fragen"), a.fragen);
     listeZeigen($("checkliste"), a.checkliste);
@@ -264,8 +346,12 @@
     $("aufgabeLink").hidden = true;
     $("aufgabeMeldung").hidden = true;
 
-    var code = typeof st.programme[a.id] === "string" ? st.programme[a.id] : startcode(a);
-    A.programmLaden(code, quelle(a));
+    var fg = freigabe(a), zu = fg && fg.gesperrt;
+    var code = zu ? "# Diese Lernkontrolle ist noch gesperrt.\n" : typeof st.programme[a.id] === "string" ? st.programme[a.id] : startcode(a);
+    A.sperren(false);
+    A.programmLaden(code, zu ? { name: a.titel, speichern: function () { return true; } } : quelle(a));
+    A.sperren(zu);
+    $("selbst").disabled = !!zu;
     var k = $("knopfStartcode");
     k.hidden = false;
     k.textContent = a.startcode === undefined && von ? "Programm aus «" + von.titel + "» übernehmen" : "Zurück zum Startcode";
@@ -274,8 +360,26 @@
     vorlageSetzen();
     $("pruefung").hidden = true;
     statusZeigen();
-    tabsAktualisieren();
+    pfadZeigen();
+    naviZeigen();
+    einklappenZeigen();
     adresseSetzen();
+  }
+  function abschnittVon(a) {
+    var name = "";
+    a.reiheObj.aufgaben.some(function (x) { if (x.abschnitt) name = x.abschnitt; return x === a; });
+    return name;
+  }
+
+  // Hinweis bei Lernkontrollen (und Sperre, wenn die Reihe «freigabe» hat)
+  function freigabeZeigen(a) {
+    var fg = freigabe(a), p = $("freigabe");
+    p.hidden = !fg;
+    p.classList.toggle("gesperrt", !!(fg && fg.gesperrt));
+    if (!fg) return;
+    p.textContent = fg.gesperrt
+      ? "Diese Lernkontrolle öffnet sich, wenn Sie mindestens " + Math.round(fg.anteil * 100) + " % der Aufgaben davor erledigt haben (bis jetzt " + fg.n + " von " + fg.von + ")."
+      : "Empfohlen, wenn Sie die Aufgaben davor erledigt haben (" + fg.n + " von " + fg.von + ").";
   }
 
   function etikettenZeigen(a) {
@@ -335,7 +439,8 @@
     if (e.g || e.s) st.erledigt[aufg.id] = e; else delete st.erledigt[aufg.id];
     speichern();
     statusZeigen();
-    tabsAktualisieren();
+    pfadZeigen();
+    if (aufg.reiheObj.freigabe !== undefined) freigabeZeigen(aufg);
   });
 
   /* ---------- Automatische Prüfung ----------------------------- */
@@ -347,14 +452,6 @@
   }
   function prozent(x) { return Math.floor(x * 100) + " %"; }
 
-  function naechste() {
-    var i = reihe.aufgaben.indexOf(aufg);
-    if (i < reihe.aufgaben.length - 1) return { reihe: reihe, aufgabe: reihe.aufgaben[i + 1] };
-    var j = kurs.reihen.indexOf(reihe);
-    if (j < kurs.reihen.length - 1 && !kurs.reihen[j + 1].weiterfuehrend) return { reihe: kurs.reihen[j + 1], aufgabe: kurs.reihen[j + 1].aufgaben[0] };
-    return null;
-  }
-
   function pruefungZeigen(art, kopf, saetze, knopf) {
     var m = $("pruefung");
     m.className = "bk-meldung" + (art ? " " + art : "");
@@ -365,7 +462,31 @@
     m.hidden = false;
   }
 
-  A.hooks.start = A.hooks.zurueck = function () { $("pruefung").hidden = true; };
+  A.hooks.zurueck = function () { $("pruefung").hidden = true; };
+  A.hooks.start = function () {
+    $("pruefung").hidden = true;
+    if (aufg && aufg.vorhersage) {
+      var v = vorhersage(aufg);
+      if (!v.l) { v.l = 1; speichern(); vergleichZeigen(); }
+    }
+  };
+  A.hooks.vorStart = function () {
+    if (!aufg || !aufg.vorhersage) return true;
+    var v = vorhersage(aufg);
+    if (v.l || vorhersageGenug(v.t)) return true;
+    var zur = el("button", "bk-knopf primaer", "Vorhersage aufschreiben"), ohne = el("button", "bk-knopf", "Ohne Vorhersage starten");
+    zur.type = ohne.type = "button";
+    zur.addEventListener("click", function () {
+      if (st.zu) { st.zu = false; speichern(); einklappenZeigen(); }
+      $("vorhersageText").focus();
+      $("vorhersage").scrollIntoView({ block: "center", behavior: "smooth" });
+    });
+    ohne.addEventListener("click", function () { $("pruefung").hidden = true; A.starten(); });
+    var knoepfe = el("div", "tu-knoepfe");
+    knoepfe.append(zur, ohne);
+    pruefungZeigen("", "Zuerst vorhersagen", ["Schreiben Sie oben bei der Aufgabe kurz auf, was das Programm zeichnen wird. Danach sehen Sie, ob Sie recht hatten."], knoepfe);
+    return false;
+  };
   A.hooks.fertig = function (zeichnung, wartet) {
     if (!aufg || !aufg.ziel || !zeichnung) return;
     if (zeichnung.voll) { pruefungZeigen("", "Nicht geprüft", ["Das Programm hat sehr viel gezeichnet; so viel kann nicht verglichen werden."]); return; }
@@ -376,17 +497,17 @@
       st.erledigt[aufg.id] = e;
       speichern();
       statusZeigen();
-      tabsAktualisieren();
-      var n = naechste(), knopf = null;
+      pfadZeigen();
+      var n = nachbar(1), knopf = null;
       if (n) {
-        knopf = el("button", "bk-knopf primaer", n.reihe === reihe ? "Nächste Aufgabe" : "Weiter zu «" + n.reihe.titel + "»");
+        knopf = el("button", "bk-knopf primaer", n.reiheObj === reihe ? "Nächste Aufgabe" : "Weiter zu «" + n.reiheObj.titel + "»");
         knopf.type = "button";
         knopf.addEventListener("click", function () {
-          if (n.reihe === reihe) waehleAufgabe(n.aufgabe); else zeigeReihe(n.reihe, n.aufgabe);
+          waehleAufgabe(n);
           window.scrollTo({ top: 0, behavior: "smooth" });
         });
       }
-      pruefungZeigen("ok", "Geschafft", ["Die Zeichnung passt zum Zielbild." + (n ? "" : " Das war die letzte Aufgabe dieser Reihe.")], knopf);
+      pruefungZeigen("ok", "Geschafft", ["Die Zeichnung passt zum Zielbild." + (n ? "" : " Das war die letzte Aufgabe.")], knopf);
       return;
     }
     var s = [];
@@ -446,6 +567,91 @@
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(function () { fertigMeldung(true); }, function () { fertigMeldung(false); });
     else fertigMeldung(false);
   });
+
+  /* ---------- Vorhersage ---------------------------------------- */
+
+  function vorhersage(a) { return st.vorhersagen[a.id] || (st.vorhersagen[a.id] = {}); }
+  function vorhersageGenug(t) { return !!t && t.trim().replace(/\s+/g, " ").length >= 8; }
+  function vorhersageZeigen(a) {
+    $("vorhersage").hidden = !a.vorhersage;
+    if (!a.vorhersage) return;
+    $("vorhersageText").value = (st.vorhersagen[a.id] || {}).t || "";
+    vergleichZeigen();
+  }
+  // Nach dem ersten Start: mit dem Ergebnis vergleichen (die Zeile hat immer dieselbe Höhe)
+  function vergleichZeigen() {
+    var v = st.vorhersagen[aufg.id] || {}, box = $("vergleich");
+    box.textContent = "";
+    if (!v.l) { box.append(el("span", null, "Nach dem Start: Vergleichen Sie das Ergebnis mit Ihrer Vorhersage.")); return; }
+    box.append(el("span", null, "Stimmte Ihre Vorhersage?"));
+    [["ja", "Ja"], ["teilweise", "Teilweise"], ["nein", "Nein"]].forEach(function (w) {
+      var b = el("button", "bk-knopf tu-klein", w[1]);
+      b.type = "button";
+      b.setAttribute("aria-pressed", v.s === w[0] ? "true" : "false");
+      b.addEventListener("click", function () { vorhersage(aufg).s = w[0]; speichern(); vergleichZeigen(); });
+      box.append(b);
+    });
+  }
+  $("vorhersageText").addEventListener("input", function () {
+    vorhersage(aufg).t = this.value.slice(0, 2000);
+    speichern();
+    if (vorhersageGenug(this.value) && !$("pruefung").hidden && $("pruefung").textContent.indexOf("Zuerst vorhersagen") === 0) $("pruefung").hidden = true;
+  });
+
+  /* ---------- Übersicht und Menü -------------------------------- */
+
+  function uebersichtZeigen() {
+    var box = $("uebersichtGitter");
+    box.textContent = "";
+    kurs.reihen.forEach(function (r) {
+      var s = stand(r), k = el("section", "tu-ue-einheit" + (r === aufg.reiheObj ? " aktuell" : "") + (r.weiterfuehrend ? " weiter" : ""));
+      var h = el("h3");
+      h.append(el("span", null, r.titel), el("span", "tu-ue-stand", s.n + "/" + s.von));
+      k.append(h);
+      if (r.untertitel) k.append(el("p", "tu-ue-unter", r.untertitel));
+      var balken = el("div", "tu-balken"), b = el("i");
+      b.style.width = (s.von ? 100 * s.n / s.von : 0) + "%";
+      balken.append(b);
+      k.append(balken);
+      var name = null, ul = null;
+      r.aufgaben.forEach(function (a) {
+        if (!ul || (a.abschnitt && a.abschnitt !== name)) {
+          name = a.abschnitt || name;
+          if (name) k.append(el("div", "tu-ue-abschnitt", name));
+          ul = el("ul", "tu-ue-liste");
+          k.append(ul);
+        }
+        var e = erledigt(a), li = el("li"), knopf = el("button", "tu-ue-aufgabe");
+        knopf.type = "button";
+        knopf.append(el("i", (a.kontrolle ? "k " : "") + (e.g ? "g" : e.s ? "s" : "")), (a.zusatz ? "★ " : "") + a.titel);
+        if (a.kontrolle) knopf.append(el("em", null, "Lernkontrolle"));
+        if (a === aufg) knopf.setAttribute("aria-current", "true");
+        knopf.setAttribute("aria-label", a.titel + (e.g ? ", automatisch geprüft" : e.s ? ", selbst abgehakt" : ", offen"));
+        knopf.addEventListener("click", function () { $("uebersichtDialog").close(); waehleAufgabe(a); });
+        li.append(knopf);
+        ul.append(li);
+      });
+      box.append(k);
+    });
+  }
+  $("knopfUebersicht").addEventListener("click", function () {
+    uebersichtZeigen();
+    $("uebersichtDialog").showModal();
+    var a = $("uebersichtGitter").querySelector('[aria-current="true"]');
+    if (a) a.focus();
+  });
+  $("uebersichtZu").addEventListener("click", function () { $("uebersichtDialog").close(); });
+
+  var menue = $("menue");
+  function menueZu() { menue.hidden = true; $("knopfMenue").setAttribute("aria-expanded", "false"); }
+  $("knopfMenue").addEventListener("click", function (e) {
+    e.stopPropagation();
+    menue.hidden = !menue.hidden;
+    this.setAttribute("aria-expanded", String(!menue.hidden));
+  });
+  document.addEventListener("click", function (e) { if (!menue.hidden && !menue.contains(e.target)) menueZu(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !menue.hidden) { menueZu(); $("knopfMenue").focus(); } });
+  $("menueKonzepte").addEventListener("click", function () { menueZu(); konzepteOeffnen(); });
 
   /* ---------- Konzepte ----------------------------------------- */
 

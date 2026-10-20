@@ -11,8 +11,7 @@
   text-transform:uppercase;color:var(--accent);margin:0 0 10px;font-weight:600;
 }
 
-/* ---------- Aufgabenwahl (Kursmodus) ---------- */
-.bk-reihen{display:flex;flex-wrap:wrap;gap:8px}
+/* ---------- Kursmodus: Auswahlknöpfe und Aufgabenkarte ---------- */
 .bk-reihe{
   font:inherit;font-size:.82rem;font-family:"IBM Plex Mono",ui-monospace,monospace;letter-spacing:.06em;
   cursor:pointer;min-height:40px;padding:6px 14px;background:transparent;color:var(--ink-soft);
@@ -21,17 +20,6 @@
 .bk-reihe:hover{border-color:var(--accent);color:var(--ink)}
 .bk-reihe[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--ink);font-weight:600}
 .bk-reihe:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-.bk-aufgaben ol{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
-.bk-tab{
-  font:inherit;font-size:.9rem;cursor:pointer;min-height:44px;padding:8px 14px;
-  background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:var(--radius);
-  display:flex;align-items:center;gap:8px;
-}
-.bk-tab:hover{border-color:var(--accent)}
-.bk-tab[aria-current="true"]{border-color:var(--accent);background:var(--accent-soft);font-weight:600}
-.bk-tab .haken{color:var(--ok);font-weight:700}
-.bk-tab:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-
 .bk-aufgabe{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px}
 .bk-aufgabe h2{font-size:.95rem;letter-spacing:0;text-transform:none;color:var(--ink);margin-bottom:6px}
 .bk-aufgabe p{margin:0}
@@ -119,6 +107,4 @@
 @media (max-width:560px){
   .bk{padding:20px 14px 48px}
   .bk-bau,.bk-lauf,.bk-aufgabe{padding:14px}
-  .bk-aufgaben ol{flex-wrap:nowrap;overflow-x:auto;padding-bottom:6px}
-  .bk-tab{white-space:nowrap;flex:none}
 }

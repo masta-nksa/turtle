@@ -1,0 +1,81 @@
+/* ============================================================
+   oberflaeche.css – Seitenraster, Knöpfe, Tempo, Meldungen, Dialoge.
+   Klassen und Werte wie in masta-nksa/kara (baukasten/baukasten.css),
+   damit Kara und Turtle gleich aussehen und sich gleich bedienen lassen.
+   ============================================================ */
+
+.bk{max-width:1120px;margin:0 auto;padding:28px 20px 64px;display:flex;flex-direction:column;gap:20px}
+.bk-kopf-seite{gap:10px}
+.bk h2{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.78rem;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--accent);margin:0 0 10px;font-weight:600;
+}
+
+/* ---------- Raster ---------- */
+.bk-raster{display:grid;gap:20px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:720px){
+  .bk-raster{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
+  .bk-lauf{position:sticky;top:12px}
+}
+.bk-bau,.bk-lauf{
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;
+  display:flex;flex-direction:column;gap:12px;min-width:0;
+}
+.bk-bau h2,.bk-lauf h2{margin:0}
+
+/* ---------- Knöpfe ---------- */
+.bk-knopf{
+  font:inherit;font-size:.9rem;cursor:pointer;min-height:44px;padding:8px 16px;
+  background:var(--surface);color:var(--ink);border:1px solid var(--ink-soft);border-radius:var(--radius);
+}
+.bk-knopf:hover:not(:disabled){border-color:var(--accent);background:var(--accent-soft)}
+.bk-knopf:disabled{opacity:.45;cursor:default}
+.bk-knopf.primaer{background:var(--accent);border-color:var(--accent);color:var(--surface);font-weight:600}
+.bk-knopf.primaer:hover:not(:disabled){background:var(--accent);filter:brightness(1.1)}
+.bk-knopf:focus-visible,.bk-tempo input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+.bk-leiste{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.bk-leiste-knoepfe{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ---------- Steuerung und Tempo ---------- */
+.bk-steuerung{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.bk-tempo{display:flex;flex-direction:column;gap:2px;font-size:.8rem;color:var(--ink-soft);flex:1;min-width:140px}
+.bk-tempo input{width:100%;min-height:44px;margin:0;accent-color:var(--accent)}
+.bk-tempo-skala{display:flex;justify-content:space-between;font-size:.7rem;margin-top:-10px}
+.bk-schritt{margin:0;min-height:1.5em;font-size:.85rem;color:var(--ink-soft);font-family:"IBM Plex Mono",ui-monospace,monospace}
+
+/* ---------- Meldungen ---------- */
+.bk-meldung{
+  border-left:3px solid var(--accent);padding:10px 12px;background:var(--accent-soft);
+  display:flex;flex-direction:column;gap:8px;align-items:flex-start;
+}
+.bk-meldung[hidden]{display:none}
+.bk-meldung.ok{border-left-color:var(--ok);background:var(--ok-soft)}
+.bk-meldung.fehler{border-left-color:var(--no);background:var(--no-soft)}
+.bk-meldung strong{font-size:1.05rem}
+.bk-meldung p{margin:0}
+
+.bk-hilfe{margin:0;font-size:.85rem;color:var(--ink-soft);max-width:90ch}
+.bk-hilfe b{color:var(--ink)}
+
+/* ---------- Teilen (wie «Link zum Teilen kopieren» in Kara) ---------- */
+.bk-challenge{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.bk-challenge > [hidden]{display:none !important}
+.bk-ch-link{flex-basis:100%;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.75rem;padding:8px;color:var(--ink);background:var(--ground);border:1px solid var(--line);border-radius:var(--radius);min-width:0}
+.bk-ch-meldung{flex-basis:100%;margin:0;font-size:.88rem;color:var(--ink-soft)}
+
+/* ---------- Dialoge ---------- */
+.bk-bild [hidden]{display:none}
+.bk-bild{
+  width:min(92vw,380px);padding:18px;border:1px solid var(--line);border-radius:var(--radius);
+  background:var(--surface);color:var(--ink);box-shadow:0 12px 40px rgba(0,0,0,.35);
+}
+.bk-bild::backdrop{background:rgba(0,0,0,.55)}
+.bk-bild h2{margin:0 0 8px}
+.bk-bild-hilfe{margin:0 0 12px;font-size:.88rem;color:var(--ink-soft)}
+.bk-bild-knoepfe{display:flex;flex-wrap:wrap;gap:8px}
+
+@media (max-width:560px){
+  .bk{padding:20px 14px 48px}
+  .bk-bau,.bk-lauf{padding:14px}
+}

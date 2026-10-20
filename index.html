@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Turtle</title>
+<meta name="description" content="Mit Python und der Turtle zeichnen: direkt im Browser, ohne Installation und ohne Anmeldung.">
+<link rel="icon" href="assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="vendor/codemirror.css">
+<link rel="stylesheet" href="assets/basis.css">
+<link rel="stylesheet" href="assets/oberflaeche.css">
+<link rel="stylesheet" href="assets/turtle.css">
+</head>
+<body>
+<div class="bk" id="bk">
+  <header class="bk-kopf-seite">
+    <span class="eyebrow">Turtle · Python programmieren</span>
+    <h1>Turtle</h1>
+    <p class="lead">Schreiben Sie ein Python-Programm und lassen Sie die Turtle zeichnen. Läuft direkt im Browser, ohne Installation und ohne Anmeldung; Ihre Programme merkt sich nur dieser Browser.</p>
+    <div class="pixelrule" id="pixelrule" aria-hidden="true"></div>
+  </header>
+
+  <noscript><p class="oops">Diese Seite braucht JavaScript.</p></noscript>
+
+  <div class="bk-raster">
+    <section class="bk-bau" aria-labelledby="bauTitel">
+      <h2 id="bauTitel">Programm</h2>
+
+      <div class="tu-kopf">
+        <input type="text" class="tu-name" id="name" maxlength="60" aria-label="Name des Programms" placeholder="Name des Programms">
+        <select class="tu-wahl" id="beispiele" aria-label="Beispiel öffnen"><option value="">Beispiele …</option></select>
+      </div>
+      <div class="bk-leiste">
+        <span class="tu-gespeichert" id="gespeichert" role="status" aria-live="polite"></span>
+        <span class="bk-leiste-knoepfe">
+          <button type="button" class="bk-knopf" id="knopfNeu">Neu</button>
+          <button type="button" class="bk-knopf" id="knopfProgramme">Meine Programme</button>
+        </span>
+      </div>
+
+      <div class="tu-editor"><textarea id="code" aria-label="Python-Programm"></textarea></div>
+
+      <div class="bk-challenge">
+        <button type="button" class="bk-knopf" id="knopfTeilen">Link zum Teilen kopieren</button>
+        <button type="button" class="bk-knopf" id="knopfLaden">Herunterladen (.py)</button>
+        <input type="text" class="bk-ch-link" id="teilenLink" readonly hidden aria-label="Link zum Programm">
+        <p class="bk-ch-meldung" id="teilenMeldung" role="status" aria-live="polite" hidden></p>
+      </div>
+    </section>
+
+    <section class="bk-lauf" aria-labelledby="laufTitel">
+      <h2 id="laufTitel">Turtle-Feld</h2>
+      <div class="tu-feld" id="feld">
+        <div class="tu-leer" id="leer"><span>Drücken Sie «Start».</span></div>
+      </div>
+
+      <div class="bk-steuerung">
+        <button type="button" class="bk-knopf primaer" id="knopfStart" title="Strg/⌘ + Eingabetaste startet neu">Start</button>
+        <button type="button" class="bk-knopf" id="knopfReset">Zurücksetzen</button>
+        <label class="bk-tempo">Tempo
+          <input type="range" id="tempo" min="1" max="7" step="1" value="3" aria-valuetext="mittel">
+          <span class="bk-tempo-skala" aria-hidden="true"><span>langsam</span><span>schnell</span></span>
+        </label>
+      </div>
+      <p class="bk-schritt" id="zustand" aria-live="polite"></p>
+
+      <div class="bk-meldung fehler" id="meldung" role="alert" hidden></div>
+
+      <div class="tu-ausgabe-kopf"><h2 id="ausgabeTitel">Ausgabe</h2></div>
+      <pre class="tu-ausgabe" id="ausgabe" aria-labelledby="ausgabeTitel" aria-live="polite"></pre>
+      <div class="tu-eingabe" id="eingabeZeile" hidden>
+        <input type="text" id="eingabe" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Eingabe für input()">
+        <button type="button" class="bk-knopf primaer" id="knopfEingabe">Senden</button>
+      </div>
+    </section>
+  </div>
+
+  <p class="bk-hilfe">
+    <b>Bedienung:</b> «Start» führt das Programm aus; während es läuft, wird daraus «Pause» und danach «Weiter».
+    Strg+Eingabetaste (Mac: ⌘+Eingabetaste) startet im Editor neu. «Zurücksetzen» bricht ab und leert das Feld.
+    <b>Tempo:</b> Der Regler bremst oder beschleunigt die Turtle, auch während sie zeichnet. Was das Programm mit
+    <code>speed()</code> festlegt, gilt weiterhin im Verhältnis; <code>speed(0)</code> zeichnet immer ohne Animation.
+    <b>Speichern:</b> Jede Änderung bleibt in diesem Browser. Für einen anderen Computer: «Link zum Teilen kopieren»
+    oder «Herunterladen».
+  </p>
+</div>
+
+<dialog class="bk-bild tu-dialog" id="programmeDialog" aria-labelledby="programmeTitel">
+  <h2 id="programmeTitel">Meine Programme</h2>
+  <p class="bk-bild-hilfe">Die Programme liegen nur in diesem Browser. Sichern Sie wichtige Programme zusätzlich als Datei.</p>
+  <ul class="tu-liste" id="liste"></ul>
+  <div class="bk-bild-knoepfe">
+    <button type="button" class="bk-knopf" id="knopfOeffnen">Datei öffnen (.py, .json)</button>
+    <button type="button" class="bk-knopf" id="knopfSichern">Alle sichern (.json)</button>
+    <button type="button" class="bk-knopf" id="programmeZu">Schliessen</button>
+  </div>
+  <input type="file" id="datei" accept=".py,.txt,.json,text/plain,application/json" hidden>
+</dialog>
+
+<dialog class="bk-bild tu-dialog" id="importDialog" aria-labelledby="importTitel">
+  <h2 id="importTitel">Programm erhalten</h2>
+  <p class="bk-bild-hilfe" id="importText"></p>
+  <pre class="tu-vorschau" id="importCode"></pre>
+  <div class="bk-bild-knoepfe">
+    <button type="button" class="bk-knopf primaer" id="importJa">Übernehmen</button>
+    <button type="button" class="bk-knopf" id="importNein">Ablehnen</button>
+  </div>
+</dialog>
+
+<script src="vendor/codemirror.js"></script>
+<script src="vendor/python.js"></script>
+<script src="vendor/closebrackets.js"></script>
+<script src="vendor/matchbrackets.js"></script>
+<script src="vendor/lz-string.min.js"></script>
+<script src="assets/beispiele.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>

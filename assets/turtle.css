@@ -1,0 +1,106 @@
+/* ============================================================
+   turtle.css – Editor, Turtle-Feld, Ausgabe und Programmliste.
+   Farben aus basis.css, Grundbausteine aus oberflaeche.css.
+   ============================================================ */
+
+:root{
+  --tok-kw:#a3411f; --tok-str:#1f5f99; --tok-num:#7a4fb0; --tok-com:#7d8b89; --tok-def:#0f6b63; --tok-builtin:#1f7a4d;
+  --sel:#cfe6e2; --fehlerzeile:rgba(163,65,31,.16);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --tok-kw:#e8a084; --tok-str:#8cc4f5; --tok-num:#c7a6f0; --tok-com:#7f908e; --tok-def:#5fd3c4; --tok-builtin:#66d29a;
+    --sel:#24433f; --fehlerzeile:rgba(232,160,132,.18);
+  }
+}
+:root[data-theme="dark"]{
+  --tok-kw:#e8a084; --tok-str:#8cc4f5; --tok-num:#c7a6f0; --tok-com:#7f908e; --tok-def:#5fd3c4; --tok-builtin:#66d29a;
+  --sel:#24433f; --fehlerzeile:rgba(232,160,132,.18);
+}
+
+/* ---------- Programmkopf ---------- */
+.tu-kopf{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tu-name{
+  flex:1 1 180px;min-width:0;min-height:44px;padding:8px 12px;font:inherit;font-weight:600;
+  color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+}
+.tu-name:focus-visible,.tu-wahl:focus-visible,.tu-eingabe input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.tu-wahl{
+  font:inherit;font-size:.9rem;min-height:44px;padding:8px 12px;cursor:pointer;
+  color:var(--ink);background:var(--surface);border:1px solid var(--ink-soft);border-radius:var(--radius);
+}
+.tu-gespeichert{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.78rem;color:var(--ink-soft);min-height:1.2em}
+
+/* ---------- Editor (CodeMirror 5) ---------- */
+.tu-editor{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.tu-editor .CodeMirror{
+  height:min(62vh,560px);min-height:280px;background:var(--surface);color:var(--ink);
+  font:15px/1.55 "IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+.tu-editor .CodeMirror-gutters{background:var(--ground);border-right:1px solid var(--line)}
+.tu-editor .CodeMirror-linenumber{color:var(--ink-soft)}
+.tu-editor .CodeMirror-cursor{border-left-color:var(--ink)}
+.tu-editor .CodeMirror-selected,.tu-editor .CodeMirror-focused .CodeMirror-selected{background:var(--sel)}
+.tu-editor .CodeMirror-matchingbracket{color:inherit !important;background:var(--sel)}
+.tu-editor .CodeMirror-focused{outline:none}
+.tu-editor:focus-within{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.cm-s-default .cm-keyword{color:var(--tok-kw);font-weight:600}
+.cm-s-default .cm-string,.cm-s-default .cm-string-2{color:var(--tok-str)}
+.cm-s-default .cm-number{color:var(--tok-num)}
+.cm-s-default .cm-comment{color:var(--tok-com);font-style:italic}
+.cm-s-default .cm-def{color:var(--tok-def);font-weight:600}
+.cm-s-default .cm-builtin,.cm-s-default .cm-variable-3{color:var(--tok-builtin)}
+.cm-s-default .cm-variable,.cm-s-default .cm-variable-2,.cm-s-default .cm-operator,.cm-s-default .cm-property{color:var(--ink)}
+.tu-fehlerzeile{background:var(--fehlerzeile)}
+
+/* ---------- Turtle-Feld ---------- */
+.tu-feld{
+  position:relative;width:100%;aspect-ratio:1;background:#fff;
+  border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
+}
+.tu-feld iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff}
+.tu-leer{
+  position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center;
+  color:#5a6968;font-size:.9rem;
+  background-image:linear-gradient(#e4e9e8 1px,transparent 1px),linear-gradient(90deg,#e4e9e8 1px,transparent 1px);
+  background-size:10% 10%;background-position:center;
+}
+.tu-leer span{background:#fff;padding:4px 10px;border-radius:var(--radius)}
+.tu-leer[hidden]{display:none}
+
+/* ---------- Ausgabe (print / input) ---------- */
+.tu-ausgabe-kopf{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tu-ausgabe{
+  margin:0;min-height:5.5em;max-height:14em;overflow:auto;padding:10px 12px;
+  font:.88rem/1.5 "IBM Plex Mono",ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere;
+  color:var(--ink);background:var(--ground);border:1px solid var(--line);border-radius:var(--radius);
+}
+.tu-ausgabe:empty::before{content:"Hier erscheint, was Ihr Programm mit print() ausgibt.";color:var(--ink-soft)}
+.tu-ausgabe .ein{color:var(--accent);font-weight:600}
+.tu-ausgabe .fehler{color:var(--no)}
+.tu-eingabe{display:flex;gap:8px}
+.tu-eingabe[hidden]{display:none}
+.tu-eingabe input{
+  flex:1;min-width:0;min-height:44px;padding:8px 12px;font:inherit;font-family:"IBM Plex Mono",ui-monospace,monospace;
+  color:var(--ink);background:var(--surface);border:2px solid var(--accent);border-radius:var(--radius);
+}
+
+/* ---------- Meine Programme ---------- */
+.tu-dialog{width:min(92vw,560px)}
+.tu-liste{list-style:none;margin:0 0 12px;padding:0;max-height:50vh;overflow:auto;border:1px solid var(--line);border-radius:var(--radius)}
+.tu-liste li{display:flex;align-items:center;gap:8px;padding:6px 6px 6px 12px;border-bottom:1px solid var(--line)}
+.tu-liste li:last-child{border-bottom:0}
+.tu-liste li[aria-current="true"]{background:var(--accent-soft)}
+.tu-liste .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tu-liste .dt{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.75rem;color:var(--ink-soft);white-space:nowrap}
+.tu-liste .bk-knopf{min-height:36px;padding:4px 10px;font-size:.85rem}
+.tu-vorschau{
+  margin:0 0 12px;max-height:40vh;overflow:auto;padding:10px 12px;
+  font:.8rem/1.5 "IBM Plex Mono",ui-monospace,monospace;white-space:pre;
+  background:var(--ground);border:1px solid var(--line);border-radius:var(--radius);
+}
+
+@media (max-width:560px){
+  .tu-liste .dt{display:none}
+  .tu-editor .CodeMirror{height:50vh}
+}

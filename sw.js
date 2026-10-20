@@ -15,6 +15,7 @@ var DATEIEN = [
   "assets/basis.css",
   "assets/beispiele.js",
   "assets/favicon.svg",
+  "assets/fehlerhilfe.js",
   "assets/oberflaeche.css",
   "assets/turtle.css",
   "laufzeit/skulpt.html",

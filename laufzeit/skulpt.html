@@ -6,8 +6,9 @@
 <title>Turtle-Laufzeit</title>
 <style>
   html, body { margin: 0; height: 100%; overflow: hidden; background: #fff; }
-  /* Feste Weltgrösse, per transform auf die Breite des Feldes skaliert */
-  #turtle { width: 500px; height: 500px; transform-origin: 0 0; outline: none; }
+  /* Leinwand 1500 × 1500 (Welt −750 … 750); sichtbar ist ein Ausschnitt um die Mitte,
+     per transform auf die Breite des Feldes skaliert */
+  #turtle { width: 1500px; height: 1500px; transform-origin: 0 0; outline: none; }
 </style>
 </head>
 <body>
@@ -19,19 +20,50 @@
 /* Läuft in einem Sandbox-iframe ohne eigenen Ursprung: Der Schülercode sieht
    weder die gespeicherten Programme noch die Seite darum herum.
    Nachrichten von der Seite:  start {code, faktor} · pause · weiter · tempo {faktor} · eingabe {text}
-   Nachrichten an die Seite:   bereit · aus {text} · eingabe {prompt} · fertig · fehler {text, zeile}
+   Nachrichten an die Seite:   bereit · aus {text} · eingabe {prompt} · fertig
+                               · fehler {text, art, nachricht, stapel} · ansicht {groesse} · position {x, y, ausserhalb}
    Zurücksetzen entfernt das ganze iframe; ein eigener Stopp ist darum nicht nötig. */
 (function () {
   "use strict";
-  var WELT = 500;
+  var FELD = 500, LEINWAND = 1500;   // sichtbares Grundfeld, grösste Ansicht (Welteinheiten)
   var feld = document.getElementById("turtle");
   var faktor = 1, pausiert = false, warten = null, eingabeFertig = null;
 
   function senden(m) { parent.postMessage(m, "*"); }
 
-  function skalieren() { feld.style.transform = "scale(" + (window.innerWidth / WELT) + ")"; }
-  window.addEventListener("resize", skalieren);
-  skalieren();
+  // Ansicht: wie viele Welteinheiten die Breite des Feldes zeigt. Verlässt die Turtle den
+  // Ausschnitt, zoomt die Ansicht weich heraus (höchstens bis zur ganzen Leinwand).
+  var ansicht = FELD, ziel = FELD, zoomStart = 0, zoomVon = FELD, zoomLaeuft = false;
+  function ansichtAnwenden() {
+    var s = window.innerWidth / ansicht, t = window.innerWidth / 2 - LEINWAND / 2 * s;
+    feld.style.transform = "translate(" + t + "px," + t + "px) scale(" + s + ")";
+    senden({ typ: "ansicht", groesse: ansicht });
+  }
+  function zoomSchritt(jetzt) {
+    var a = Math.min(1, (jetzt - zoomStart) / 350), w = 1 - Math.pow(1 - a, 3);
+    ansicht = zoomVon + (ziel - zoomVon) * w;
+    ansichtAnwenden();
+    if (a < 1) requestAnimationFrame(zoomSchritt); else zoomLaeuft = false;
+  }
+  function zoomen(neu) {
+    if (neu <= ziel) return;
+    ziel = neu; zoomVon = ansicht; zoomStart = performance.now();
+    if (!zoomLaeuft) { zoomLaeuft = true; requestAnimationFrame(zoomSchritt); }
+  }
+  window.addEventListener("resize", ansichtAnwenden);
+  ansichtAnwenden();
+
+  // Jede Bewegung meldet ihr Ziel: Ansicht anpassen, Position an die Seite (einmal pro Bild)
+  var position = null, positionGemeldet = true;
+  function bewegt(x, y) {
+    var noetig = 2 * Math.max(Math.abs(x), Math.abs(y)) + 40;
+    if (noetig > ziel) zoomen(Math.min(LEINWAND, Math.ceil(noetig / 100) * 100));
+    position = { typ: "position", x: x, y: y, ausserhalb: Math.max(Math.abs(x), Math.abs(y)) > LEINWAND / 2 };
+    if (positionGemeldet) {
+      positionGemeldet = false;
+      requestAnimationFrame(function () { positionGemeldet = true; senden(position); });
+    }
+  }
 
   // Tempo-Regler: Der Faktor wirkt auf die Geschwindigkeit, die das Programm mit speed() wählt.
   // speed(0) bleibt sofort; Faktor Infinity zeichnet jeden Schritt ohne Zwischenbilder.
@@ -41,12 +73,14 @@
     return s * faktor;
   }
 
-  // Zwei kleine Eingriffe ins Turtle-Modul von Skulpt (Quelltext in skulpt-stdlib.js):
+  // Kleine Eingriffe ins Turtle-Modul von Skulpt (Quelltext in skulpt-stdlib.js):
   // 1. Bewegungen und Drehungen fragen den Tempo-Faktor ab.
-  // 2. Mausklicks rechnen die Skalierung des Feldes heraus.
+  // 2. Mausklicks rechnen Zoom und Skalierung des Feldes heraus.
+  // 3. Jede Bewegung meldet ihr Ziel (für Zoom und Koordinatenanzeige).
   (function anpassen() {
     var pfad = "src/lib/turtle.js", q = Sk.builtinFiles.files[pfad];
     var ersatz = [
+      ["function translate(e,a,l,o,d,_,c){", "function translate(e,a,l,o,d,_,c){Sk.TurtleGraphics.bewegt(a+o,l+d);"],
       ["var u,m=e._computed_speed,", "var u,m=Sk.TurtleGraphics.tempo(e._computed_speed),"],
       ["var o,d=e._computed_speed,", "var o,d=Sk.TurtleGraphics.tempo(e._computed_speed),"],
       ["e=0|r.clientX-l.left,n=0|r.clientY-l.top",
@@ -85,16 +119,17 @@
       __future__: Sk.python3,
       yieldLimit: 50
     });
-    Sk.TurtleGraphics = { target: "turtle", width: WELT, height: WELT, tempo: tempo };
+    Sk.TurtleGraphics = { target: "turtle", width: LEINWAND, height: LEINWAND, tempo: tempo, bewegt: bewegt };
 
     Sk.misceval.asyncToPromise(function () {
       return Sk.importMainWithBody("<stdin>", false, code, true);
     }, { "*": unterbrechung }).then(function () {
       senden({ typ: "fertig" });
     }, function (err) {
-      var zeile = null;
-      if (err && err.traceback && err.traceback.length) zeile = err.traceback[0].lineno;
-      senden({ typ: "fehler", text: String(err), zeile: zeile });
+      var stapel = (err && err.traceback || []).map(function (t) { return t.lineno; });
+      var nachricht = "";
+      try { nachricht = err.args && err.args.v && err.args.v.length ? String(err.args.v[0]) : ""; } catch (e) { /* weiter */ }
+      senden({ typ: "fehler", text: String(err), art: (err && err.tp$name) || "", nachricht: nachricht, stapel: stapel });
     });
   }
 

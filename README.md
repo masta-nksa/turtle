@@ -18,6 +18,7 @@ assets/oberflaeche.css    Raster, Knöpfe, Tempo, Meldungen, Dialoge (Klassen wi
 assets/turtle.css         Editor, Turtle-Feld, Ausgabe, Programmliste
 assets/app.js             Speichern, Teilen, Ablauf (Start/Pause/Weiter, Tempo)
 assets/beispiele.js       Startprogramm und Beispiele
+assets/fehlerhilfe.js     erklärt Python-Fehler auf Deutsch (ohne DOM, auch mit node testbar)
 laufzeit/skulpt.html      führt das Programm aus (Sandbox-iframe)
 sw.js                     Service Worker für den Offline-Betrieb
 vendor/                   Skulpt 1.2.0, CodeMirror 5.65.18, lz-string 1.5.0 (mit Lizenzen)
@@ -30,10 +31,27 @@ vendor/                   Skulpt 1.2.0, CodeMirror 5.65.18, lz-string 1.5.0 (mit
 - **Tempo** hat sieben Stufen wie in Kara (sehr langsam … Turbo) und wirkt auch während des
   Zeichnens. Der Regler multipliziert die Geschwindigkeit aus `speed()`; `speed(0)` bleibt
   sofort, «Turbo» zeichnet jeden Schritt ohne Zwischenbilder.
-- Fehler: Die Zeile wird im Editor markiert, darunter erscheint ein kurzer Tipp auf Deutsch.
 - `input()` fragt in einem Eingabefeld unter der Ausgabe.
-- Das Turtle-Feld ist immer 500 × 500 Punkte gross (Ursprung in der Mitte) und wird auf die
-  verfügbare Breite skaliert.
+- Das Turtle-Feld zeigt −250 … 250 in beide Richtungen (Ursprung in der Mitte) und wird auf die
+  verfügbare Breite skaliert. Verlässt die Turtle diesen Bereich, zoomt die Ansicht weich heraus,
+  bis höchstens −750 … 750; unter dem Feld steht dann «Herausgezoomt: … %». Die Leinwand ist
+  dafür 1500 × 1500 gross; `turtle.window_width()` liefert darum 1500.
+- **Koordinatensystem einblenden** (Schalter über dem Feld) legt Achsen und Gitter über die
+  Zeichnung, passend zum Zoom, und zeigt die Position der Turtle. Die Wahl merkt sich der Browser.
+
+## Fehlerhilfe
+
+Bei einem Fehler wird die Zeile im Editor markiert. Die Meldung unter dem Feld zeigt den Ort
+(bei Funktionen auch, von wo sie aufgerufen wurde), die Zeile selbst, eine Erklärung auf Deutsch,
+einen konkreten Tipp («Meinten Sie «left»?») und die Originalmeldung von Python. «Mehr zu diesem
+Fehler» klappt eine allgemeine Erklärung mit einem Beispiel «So nicht / So geht es» auf. In der
+Ausgabe steht der Verlauf wie in Python (Traceback).
+
+Skulpt meldet Syntaxfehler nur als «bad input» und oft eine Zeile zu spät (etwa bei einer
+fehlenden Klammer). `fehlerhilfe.js` sucht darum selbst: fehlender Doppelpunkt, fehlende oder
+überzählige Klammer, offenes Anführungszeichen, Einrückung, `=` statt `==`, `print` ohne Klammern.
+Bei unbekannten Namen und Befehlen schlägt sie ähnliche Namen aus dem Programm, aus Python und aus
+dem Turtle-Modul vor.
 
 ## Speichern und Teilen
 
@@ -52,6 +70,7 @@ löschen, die länger nicht besucht wurden; wichtige Programme darum herunterlad
 | --- | --- |
 | `turtle.programme.v1` | alle Programme und welches offen ist |
 | `turtle.tempo.v1` | Stellung des Tempo-Reglers |
+| `turtle.koordinaten.v1` | Koordinatensystem ein/aus |
 
 Kara, Checks und Turtle liegen unter `masta-nksa.github.io` und teilen sich den
 `localStorage`; die Präfixe `kara.` und `turtle.` halten sie auseinander.
@@ -79,11 +98,12 @@ verändern. Die Seite und das iframe sprechen nur über `postMessage`.
 
 ## Anpassungen an Skulpt
 
-`vendor/` bleibt unverändert. `laufzeit/skulpt.html` ersetzt beim Laden zwei Stellen im
+`vendor/` bleibt unverändert. `laufzeit/skulpt.html` ersetzt beim Laden drei Stellen im
 Quelltext des Turtle-Moduls (aus `skulpt-stdlib.js`): Bewegungen und Drehungen fragen den
-Tempo-Faktor ab, und Mausklicks rechnen die Skalierung des Feldes heraus. Findet es eine Stelle
-nicht (etwa nach einem Skulpt-Update), meldet es das in der Konsole; das Programm läuft trotzdem,
-nur ohne Tempo-Regler.
+Tempo-Faktor ab, jede Bewegung meldet ihr Ziel (für Zoom und Koordinatenanzeige), und Mausklicks
+rechnen Zoom und Skalierung des Feldes heraus. Findet es eine Stelle nicht (etwa nach einem
+Skulpt-Update), meldet es das in der Konsole; das Programm läuft trotzdem, nur ohne die
+entsprechende Funktion.
 
 ## Lokal testen
 

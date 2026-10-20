@@ -20,6 +20,8 @@ Fachliche Doku (Aufbau, Bedienung, Speichern, Teilen): siehe `README.md`.
 - Schülercode läuft nur im Sandbox-iframe (`laufzeit/`), nie in der Seite selbst.
   Geteilte Programme werden nie automatisch gestartet.
 - Keine Nutzungsstatistik (GoatCounter nur in Kara).
+- Nichts darf beim Tippen oder Ausführen das Layout darüber verschieben (feste Höhen für
+  wechselnde Statuszeilen).
 - Offline: neue Dateien in `DATEIEN` in `sw.js` eintragen; `vendor/` geändert → `VERSION` hochzählen.
 
 ## Testen
@@ -32,5 +34,6 @@ fuser -k 8123/tcp                    # Server beenden (nicht pkill -f)
 Playwright mit Chromium unter `/opt/pw-browsers/chromium`; Testskripte nur im Scratchpad.
 Bewährt: Start/Pause/Weiter, Tempo während des Laufs umstellen, Endlosschleife pausieren,
 `input()`, Fehlerzeile, Neuladen (Programm und Tempo bleiben), Teilen-Link in zweitem Kontext,
-kaputter Link, Handy-Breite (kein horizontales Scrollen), Hell/Dunkel, offline
+kaputter Link, Handy-Breite (kein horizontales Scrollen), Hell/Dunkel, Zoom beim Verlassen des
+Feldes, Koordinatensystem, Fehlermeldungen (`fehlerhilfe.js` direkt mit node prüfen), offline
 (`context.setOffline(true)`: Seite offen ohne Service Worker, und mit Service Worker neu laden).

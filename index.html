@@ -52,9 +52,14 @@
 
     <section class="bk-lauf" aria-labelledby="laufTitel">
       <h2 id="laufTitel">Turtle-Feld</h2>
+      <label class="bk-nebel-schalter">
+        <input type="checkbox" id="koordinaten"> Koordinatensystem einblenden
+      </label>
       <div class="tu-feld" id="feld">
         <div class="tu-leer" id="leer"><span>Drücken Sie «Start».</span></div>
+        <svg class="tu-raster" id="raster" aria-hidden="true" hidden></svg>
       </div>
+      <p class="bk-feldinfo tu-feldinfo" aria-live="polite"><span id="feldPos"></span><span id="feldZoom"></span></p>
 
       <div class="bk-steuerung">
         <button type="button" class="bk-knopf primaer" id="knopfStart" title="Strg/⌘ + Eingabetaste startet neu">Start</button>
@@ -106,6 +111,7 @@
 <script src="vendor/matchbrackets.js"></script>
 <script src="vendor/lz-string.min.js"></script>
 <script src="assets/beispiele.js"></script>
+<script src="assets/fehlerhilfe.js"></script>
 <script src="assets/app.js"></script>
 </body>
 </html>

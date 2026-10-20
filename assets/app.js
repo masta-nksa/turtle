@@ -9,6 +9,7 @@
 
   var SPEICHER = "turtle.programme.v1";
   var SPEICHER_TEMPO = "turtle.tempo.v1";
+  var SPEICHER_KOORDINATEN = "turtle.koordinaten.v1";
   var LINK_PRAEFIX = "#programm=";
   var LINK_WARNUNG = 6000;          // ab dieser Länge kürzen manche Chat- und Mailprogramme
   var CODE_MAX = 100000;
@@ -95,7 +96,7 @@
 
   function aenderung() {
     if (ladend) return;
-    $("gespeichert").textContent = "…";
+    // Hinweis «Gespeichert …» bleibt stehen, nur die Uhrzeit ändert sich: kein Springen im Layout
     clearTimeout(speicherTimer);
     speicherTimer = setTimeout(sofortSpeichern, 400);
     teilenZuruecksetzen();
@@ -323,6 +324,7 @@
     $("meldung").hidden = true;
     $("eingabeZeile").hidden = true;
     fehlerzeileWeg();
+    ansichtZuruecksetzen();
     setzeZustand("bereit");
   }
 
@@ -385,35 +387,133 @@
   });
   $("knopfReset").addEventListener("click", zuruecksetzen);
 
-  var HILFE = {
-    NameError: "Python kennt diesen Namen nicht. Tippfehler oder Gross-/Kleinschreibung? Fehlt «import turtle», oder bekommt die Variable erst weiter unten einen Wert?",
-    SyntaxError: "Python versteht die Zeile nicht. Oft fehlt ein Doppelpunkt, eine Klammer oder ein Anführungszeichen, manchmal auch in der Zeile davor.",
-    IndentationError: "Die Einrückung stimmt nicht. Nach einer Zeile mit Doppelpunkt (for, while, if, def) rücken die folgenden Zeilen um 4 Leerzeichen ein.",
-    TypeError: "Ein Wert hat den falschen Typ, zum Beispiel Text statt Zahl. Was input() liefert, ist Text; int(…) macht daraus eine ganze Zahl.",
-    AttributeError: "Diesen Befehl gibt es hier nicht. Stimmt der Name, zum Beispiel forward, left, penup?",
-    ValueError: "Der Wert passt nicht, zum Beispiel int(\"zehn\").",
-    ZeroDivisionError: "Hier wird durch 0 geteilt.",
-    IndexError: "Diese Stelle gibt es in der Liste nicht. Zählen beginnt bei 0.",
-    TurtleGraphicsError: "Die Turtle kennt diesen Wert nicht, zum Beispiel einen Farbnamen. Farben auf Englisch, z. B. \"red\"."
-  };
+  var FEHLERHILFE = window.TurtleFehlerhilfe;
 
-  function fehlerZeigen(text, zeile) {
-    text = String(text || "Unbekannter Fehler").replace(/ on line \d+\s*$/, "");
-    var art = (text.match(/^(\w+)/) || [])[1];
+  function absatz(text, klasse) {
+    var p = document.createElement("p"); p.textContent = text; if (klasse) p.className = klasse; return p;
+  }
+  function codeBlock(text, ersteZeile) {
+    var pre = document.createElement("pre"); pre.className = "tu-fehlercode";
+    text.split("\n").forEach(function (z, i) {
+      if (i) pre.append("\n");
+      if (ersteZeile) { var nr = document.createElement("span"); nr.className = "nr"; nr.textContent = (ersteZeile + i) + " │ "; pre.append(nr); }
+      pre.append(z);
+    });
+    return pre;
+  }
+
+  function fehlerZeigen(f) {
+    var code = rahmen ? rahmen.dataset.code : editor.getValue();
+    var zeilen = code.split("\n");
+    var h = FEHLERHILFE.analysiere({ art: f.art, nachricht: f.nachricht, stapel: f.stapel, code: code });
+    var original = String(f.text || "Unbekannter Fehler").replace(/ on line \d+\s*$/, "");
+
+    // Ausgabe: Verlauf wie in Python, dann die Originalmeldung
+    if (h.verlauf.length) {
+      ausgeben("Traceback (most recent call last):\n", "fehler");
+      h.verlauf.forEach(function (v) {
+        ausgeben("  Zeile " + v.zeile + (v.funktion ? ", in " + v.funktion : "") + ":  " + v.text + "\n", "fehler");
+      });
+    }
+    ausgeben(original + "\n", "fehler");
+
+    // Meldung: Ort, Code der Zeile, Erklärung, Tipp, mehr zum Aufklappen
     var m = $("meldung"); m.textContent = "";
     var kopf = document.createElement("strong");
-    kopf.textContent = zeile ? "Fehler in Zeile " + zeile : "Fehler";
-    var original = document.createElement("p"); original.textContent = text;
-    m.append(kopf, original);
-    if (HILFE[art]) { var tipp = document.createElement("p"); tipp.textContent = HILFE[art]; m.append(tipp); }
+    kopf.textContent = h.ort ? "Fehler in " + h.ort : "Fehler";
+    m.append(kopf);
+    if (h.zeile && zeilen[h.zeile - 1] !== undefined && zeilen[h.zeile - 1].trim())
+      m.append(codeBlock(zeilen[h.zeile - 1].replace(/\s+$/, ""), h.zeile));
+    m.append(absatz(h.was));
+    if (h.tipp) m.append(absatz(h.tipp));
+    m.append(absatz("Python meldet: " + original, "tu-python"));
+    if (h.mehr || h.beispiel) {
+      var d = document.createElement("details"); d.className = "bk-hinweis";
+      var su = document.createElement("summary"); su.textContent = "Mehr zu diesem Fehler";
+      d.append(su);
+      if (h.mehr) d.append(absatz(h.mehr));
+      if (h.beispiel) {
+        var bsp = document.createElement("div"); bsp.className = "tu-beispiel";
+        [["So nicht:", h.beispiel.falsch], ["So geht es:", h.beispiel.richtig]].forEach(function (paar) {
+          var box = document.createElement("div"), t = document.createElement("span");
+          t.textContent = paar[0]; box.append(t, codeBlock(paar[1])); bsp.append(box);
+        });
+        d.append(bsp);
+      }
+      m.append(d);
+    }
     m.hidden = false;
-    ausgeben(text + "\n", "fehler");
-    if (typeof zeile === "number" && zeile >= 1 && zeile <= editor.lineCount()) {
-      fehlerZeile = zeile - 1;
+
+    if (typeof h.zeile === "number" && h.zeile >= 1 && h.zeile <= editor.lineCount()) {
+      fehlerZeile = h.zeile - 1;
       editor.addLineClass(fehlerZeile, "background", "tu-fehlerzeile");
       editor.scrollIntoView({ line: fehlerZeile, ch: 0 }, 60);
     }
   }
+
+  /* ---------- Koordinatensystem und Ausschnitt ------------------ */
+
+  var FELD = 500;
+  var ansichtGroesse = FELD, turtlePos = null, koordinatenAn = false;
+  var SVG = "http://www.w3.org/2000/svg";
+
+  function zahl(x) { var r = Math.round(x); return (r < 0 ? "−" : "") + Math.abs(r); }
+
+  function rasterZeichnen() {
+    var svg = $("raster");
+    svg.toggleAttribute("hidden", !koordinatenAn);   // SVG kennt die Eigenschaft hidden nicht
+    $("feld").classList.toggle("mit-raster", koordinatenAn);
+    if (!koordinatenAn) return;
+    var v = ansichtGroesse, h = v / 2;
+    var schritt = [10, 20, 25, 50, 100, 200, 250, 500].filter(function (s) { return v / s <= 12; })[0] || 500;
+    var fs = v / 36, teile = [];
+    function linie(x1, y1, x2, y2, k) { teile.push('<line class="' + k + '" x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '"/>'); }
+    function text(x, y, t, anker) {
+      teile.push('<text x="' + x + '" y="' + y + '" font-size="' + fs + '" stroke-width="' + fs / 4 + '" text-anchor="' + anker + '">' + t + "</text>");
+    }
+    for (var k = Math.ceil(-h / schritt) * schritt; k <= h; k += schritt) {
+      if (k === 0) continue;
+      linie(k, -h, k, h, "gitter");
+      linie(-h, -k, h, -k, "gitter");
+    }
+    linie(-h, 0, h, 0, "achse");
+    linie(0, -h, 0, h, "achse");
+    for (k = Math.ceil(-h / schritt) * schritt; k <= h; k += schritt) {
+      if (k === 0 || Math.abs(k) > h - fs) continue;
+      text(k, fs * 1.2, zahl(k), "middle");
+      text(fs * 0.4, -k + fs * 0.35, zahl(k), "start");
+    }
+    text(fs * 0.4, fs * 1.2, "0", "start");
+    text(h - fs * 0.5, -fs * 0.5, "x", "end");
+    text(fs * 0.6, -h + fs * 1.2, "y", "start");
+    svg.setAttribute("viewBox", -h + " " + -h + " " + v + " " + v);
+    svg.innerHTML = teile.join("");
+  }
+
+  // Eine Zeile mit fester Höhe: links die Position, rechts der Zoom (nichts verschiebt sich)
+  function feldInfoZeigen() {
+    $("feldPos").textContent = koordinatenAn && turtlePos
+      ? "Turtle bei x = " + zahl(turtlePos.x) + ", y = " + zahl(turtlePos.y) : "";
+    var zoom = $("feldZoom");
+    if (turtlePos && turtlePos.ausserhalb) zoom.textContent = "Turtle ausserhalb des Feldes";
+    else if (ansichtGroesse > FELD + 1) zoom.textContent = "Herausgezoomt: " + Math.round(FELD / ansichtGroesse * 100) + " %";
+    else zoom.textContent = "";
+    zoom.title = zoom.textContent ? "Die Turtle hat das Feld (−250 … 250) verlassen; die Ansicht zeigt mehr." : "";
+  }
+
+  function ansichtZuruecksetzen() {
+    ansichtGroesse = FELD; turtlePos = null;
+    rasterZeichnen(); feldInfoZeigen();
+  }
+
+  var koordinatenEl = $("koordinaten");
+  try { koordinatenAn = localStorage.getItem(SPEICHER_KOORDINATEN) === "1"; } catch (e) { /* aus */ }
+  koordinatenEl.checked = koordinatenAn;
+  koordinatenEl.addEventListener("change", function () {
+    koordinatenAn = koordinatenEl.checked;
+    try { localStorage.setItem(SPEICHER_KOORDINATEN, koordinatenAn ? "1" : "0"); } catch (e) { /* ohne Speicher weiter */ }
+    rasterZeichnen(); feldInfoZeigen();
+  });
 
   window.addEventListener("message", function (e) {
     if (!rahmen || e.source !== rahmen.contentWindow || !e.data) return;
@@ -428,7 +528,12 @@
       $("eingabe").focus();
     }
     else if (m.typ === "fertig") setzeZustand("fertig");
-    else if (m.typ === "fehler") { setzeZustand("fehler"); fehlerZeigen(m.text, m.zeile); }
+    else if (m.typ === "fehler") { setzeZustand("fehler"); fehlerZeigen(m); }
+    else if (m.typ === "ansicht" && m.groesse > 0) { ansichtGroesse = Number(m.groesse); rasterZeichnen(); feldInfoZeigen(); }
+    else if (m.typ === "position") {
+      turtlePos = { x: Number(m.x) || 0, y: Number(m.y) || 0, ausserhalb: !!m.ausserhalb };
+      feldInfoZeigen();
+    }
   });
 
   function eingabeSenden() {

@@ -11,6 +11,8 @@ Fachliche Doku (Aufbau, Bedienung, Speichern, Teilen): siehe `README.md`.
 - Statisch: HTML/CSS/JS ohne Build. Bibliotheken nur lokal in `vendor/`, unverändert.
   GitHub Pages aus `main`, Root; `.nojekyll` muss bleiben.
   Pages-Einstellungen und neue Repos richtet die Lehrperson selbst ein.
+- Git: direkt auf `main` committen und pushen, ohne Branch und ohne PR. Nur wenn der Prompt
+  ausdrücklich einen Branch verlangt, dort arbeiten (dann nichts in `main`).
 
 ## Konventionen
 

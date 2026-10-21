@@ -206,7 +206,7 @@ eigener Pfad), `freigabe` (0–1: Lernkontrollen erst ab diesem Anteil erledigte
 | --- | --- |
 | `id` | Pflicht; Kleinbuchstaben, Ziffern, `-`, `_`; eindeutig im ganzen Kurs (Fortschritt und Programm hängen daran) |
 | `titel`, `text` | Pflicht |
-| `abschnitt` | Zwischentitel in der Reiterleiste, gilt ab dieser Aufgabe (z. B. «Entdecken») |
+| `abschnitt` | Abschnitt im Lernpfad (z. B. «Entdecken»), gilt ab dieser Aufgabe bis zum nächsten |
 | `fragen` | nummerierte Fragen zum Code |
 | `hinweise` | Tipps, die nacheinander erscheinen |
 | `checkliste` | Punkte zum Selbst-Prüfen (Spiele, freie Aufgaben) |

@@ -35,7 +35,7 @@
 .tu-editor{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
 .tu-editor .CodeMirror{
   height:min(62vh,560px);min-height:280px;background:var(--surface);color:var(--ink);
-  font:15px/1.55 "IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font:var(--schrift,15px)/1.55 "IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
 }
 .tu-editor .CodeMirror-gutters{background:var(--ground);border-right:1px solid var(--line)}
 .tu-editor .CodeMirror-linenumber{color:var(--ink-soft)}
@@ -137,6 +137,12 @@
 /* ---------- Kopfzeilen der Bereiche, Vollbild ---------- */
 .tu-sektionkopf{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:36px}
 .tu-buehne,.tu-seite{display:flex;flex-direction:column;gap:12px;min-width:0}
+.tu-schrift{display:inline-flex;margin-left:auto}
+.tu-schrift .bk-knopf{min-height:36px;padding:4px 8px;font-size:.8rem;border-radius:0;margin-left:-1px}
+.tu-schrift .bk-knopf:first-child{border-radius:var(--radius) 0 0 var(--radius);margin-left:0}
+.tu-schrift .bk-knopf:last-child{border-radius:0 var(--radius) var(--radius) 0}
+.tu-schrift .bk-knopf:hover:not(:disabled),.tu-schrift .bk-knopf:focus-visible{position:relative}
+#schriftNormal{min-width:4.6em;font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
 .tu-vollbild{min-height:36px;padding:4px 10px;font-size:.8rem;display:inline-flex;align-items:center;gap:6px}
 .tu-vollbild svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .tu-vollbild .klein,.tu-vollbild[aria-pressed="true"] .gross{display:none}

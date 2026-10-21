@@ -10,6 +10,7 @@
   var SPEICHER = "turtle.programme.v1";
   var SPEICHER_TEMPO = "turtle.tempo.v1";
   var SPEICHER_KOORDINATEN = "turtle.koordinaten.v1";
+  var SPEICHER_SCHRIFT = "turtle.schrift.v1";
   var LINK_PRAEFIX = "#programm=";
   var LINK_WARNUNG = 6000;          // ab dieser Länge kürzen manche Chat- und Mailprogramme
   var CODE_MAX = 100000;
@@ -730,6 +731,40 @@
     try { localStorage.setItem(SPEICHER_TEMPO, tempoEl.value); } catch (e) { /* ohne Speicher weiter */ }
   });
 
+  /* ---------- Schriftgrösse im Editor ---------------------------- */
+
+  // Getrennt für die normale Ansicht und das Vollbild (Vorgabe dort gross, z. B. für den Beamer)
+  var SCHRIFT = [11, 12, 13, 15, 17, 19, 22, 25, 28, 32, 36, 42];
+  var SCHRIFT_VORGABE = { normal: 15, vollbild: 25 };
+  var schrift = { normal: SCHRIFT_VORGABE.normal, vollbild: SCHRIFT_VORGABE.vollbild };
+  try {
+    var gs = JSON.parse(localStorage.getItem(SPEICHER_SCHRIFT) || "null");
+    ["normal", "vollbild"].forEach(function (k) { if (gs && SCHRIFT.indexOf(gs[k]) >= 0) schrift[k] = gs[k]; });
+  } catch (e) { /* Vorgabe bleibt */ }
+  function schriftArt() { return vollbildModus === "programm" ? "vollbild" : "normal"; }
+  function schriftZeigen() {
+    var art = schriftArt(), px = schrift[art], i = SCHRIFT.indexOf(px);
+    $("bk").style.setProperty("--schrift", px + "px");
+    $("schriftNormal").textContent = Math.round(px / SCHRIFT_VORGABE.normal * 100) + " %";
+    $("schriftNormal").disabled = px === SCHRIFT_VORGABE[art];
+    $("schriftNormal").setAttribute("aria-label", "Schriftgrösse " + $("schriftNormal").textContent + ", zurück zur Vorgabe");
+    $("schriftKleiner").disabled = i <= 0;
+    $("schriftGroesser").disabled = i >= SCHRIFT.length - 1;
+    editor.refresh();
+  }
+  function schriftSetzen(px) {
+    schrift[schriftArt()] = px;
+    try { localStorage.setItem(SPEICHER_SCHRIFT, JSON.stringify(schrift)); } catch (e) { /* ohne Speicher weiter */ }
+    schriftZeigen();
+  }
+  function schriftSchritt(d) {
+    var i = SCHRIFT.indexOf(schrift[schriftArt()]) + d;
+    if (i >= 0 && i < SCHRIFT.length) schriftSetzen(SCHRIFT[i]);
+  }
+  $("schriftKleiner").addEventListener("click", function () { schriftSchritt(-1); });
+  $("schriftGroesser").addEventListener("click", function () { schriftSchritt(1); });
+  $("schriftNormal").addEventListener("click", function () { schriftSetzen(SCHRIFT_VORGABE[schriftArt()]); });
+
   /* ---------- Vollbild ------------------------------------------ */
 
   // «programm»: Editor gross, Feld und Ausgabe schmal daneben; «feld»: Turtle-Feld so gross wie möglich.
@@ -739,6 +774,7 @@
   function vollbildSetzen(modus) {
     vollbildModus = modus;
     if (modus) document.body.dataset.vollbild = modus; else delete document.body.dataset.vollbild;
+    schriftZeigen();
     document.querySelectorAll(".tu-vollbild").forEach(function (k) {
       var an = k.dataset.vollbild === modus;
       k.setAttribute("aria-pressed", an ? "true" : "false");
@@ -797,6 +833,7 @@
     vorlage: function (svg) { vorlageSvg = svg || ""; rasterZeichnen(); },
     farbeText: farbeText
   };
+  schriftZeigen();
   if (!KURS) freiStarten();
   kurzhilfe();
   try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) { /* freiwillig */ }

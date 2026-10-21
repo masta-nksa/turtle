@@ -109,6 +109,7 @@
           <button type="button" class="bk-knopf" id="knopfStartcode" hidden>Zurück zum Startcode</button>
           <button type="button" class="bk-knopf" id="knopfNeu">Neu</button>
           <button type="button" class="bk-knopf" id="knopfProgramme">Meine Programme</button>
+          <button type="button" class="bk-knopf" id="knopfDoku" aria-controls="doku" aria-expanded="false" title="Befehle und Anleitungen nachschlagen">Doku</button>
         </span>
       </div>
 
@@ -175,6 +176,19 @@
   </div>
 </div>
 
+<aside class="tu-doku" id="doku" aria-labelledby="dokuTitel" hidden>
+  <div class="tu-doku-kopf">
+    <h2 id="dokuTitel">Doku</h2>
+    <button type="button" class="bk-knopf" id="dokuZu" title="Doku schliessen (Esc)">Schliessen</button>
+  </div>
+  <div class="tu-doku-suchzeile">
+    <input type="search" class="tu-doku-suche" id="dokuSuche" placeholder="Suchen, z. B. Kreis" aria-label="In der Doku suchen" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <select class="tu-wahl" id="dokuGruppe" aria-label="Zu einer Gruppe springen"><option value="">Gruppe …</option></select>
+  </div>
+  <p class="tu-doku-info" id="dokuInfo" role="status" aria-live="polite"></p>
+  <div class="tu-doku-liste" id="dokuListe"></div>
+</aside>
+
 <dialog class="bk-bild tu-dialog" id="programmeDialog" aria-labelledby="programmeTitel">
   <h2 id="programmeTitel">Meine Programme</h2>
   <p class="bk-bild-hilfe">Die Programme liegen nur in diesem Browser. Sichern Sie wichtige Programme zusätzlich als Datei.</p>
@@ -228,5 +242,6 @@
 <script src="assets/pruefung.js"></script>
 <script src="assets/app.js"></script>
 <script src="assets/kursmodus.js"></script>
+<script src="assets/doku.js"></script>
 </body>
 </html>

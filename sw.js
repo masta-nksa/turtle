@@ -16,6 +16,7 @@ var DATEIEN = [
   "assets/basis.css",
   "assets/befehle.js",
   "assets/beispiele.js",
+  "assets/doku.js",
   "assets/favicon.svg",
   "assets/fehlerhilfe.js",
   "assets/kurs.js",

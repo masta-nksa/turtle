@@ -130,6 +130,7 @@
 
   // Kurzhilfe: steht der Cursor auf einem Befehl (oder in seinen Klammern), eine Zeile dazu.
   // Die Zeile hat eine feste Höhe; ohne Treffer bleibt sie leer bzw. zeigt einen Hinweis.
+  // Ein Klick auf den Befehl öffnet ihn in der Doku (doku.js).
   var kurzhilfeEl = $("kurzhilfe"), kurzhilfeAlt;
   function kurzhilfe() {
     var c = editor.getCursor(), e = window.TurtleBefehle ? window.TurtleBefehle.beiCursor(editor.getLine(c.line) || "", c.ch) : null;
@@ -138,9 +139,12 @@
     kurzhilfeEl.textContent = "";
     kurzhilfeEl.classList.toggle("leer", !e);
     if (!e) { kurzhilfeEl.textContent = "Kurzhilfe: Setzen Sie den Cursor auf einen Befehl."; return; }
-    var code = document.createElement("code");
+    var code = document.createElement("code"), knopf = document.createElement("button");
     code.textContent = e.aufruf;
-    kurzhilfeEl.append(code, " " + e.text);
+    knopf.type = "button"; knopf.className = "tu-dokulink"; knopf.title = "In der Doku zeigen";
+    knopf.append(code);
+    knopf.addEventListener("click", function () { if (window.TurtleDoku) window.TurtleDoku.zeige(e.name); });
+    kurzhilfeEl.append(knopf, " " + e.text);
     kurzhilfeEl.title = e.aufruf + " – " + e.text;
   }
   editor.on("cursorActivity", kurzhilfe);
@@ -493,6 +497,17 @@
     return pre;
   }
 
+  // «Meinten Sie «forward»?» → Knopf, der den Befehl in der Doku zeigt
+  function dokuVerweis(p, text) {
+    var B = window.TurtleBefehle, m = /«(?:[A-Za-z_]\w*\.)?([A-Za-z_]\w*)/.exec(text);
+    if (!m || !B || !B.nachName[m[1]] || !window.TurtleDoku) return p;
+    var k = document.createElement("button");
+    k.type = "button"; k.className = "tu-dokulink"; k.textContent = B.nachName[m[1]].name + " in der Doku";
+    k.addEventListener("click", function () { window.TurtleDoku.zeige(m[1]); });
+    p.append(" ", k);
+    return p;
+  }
+
   function fehlerZeigen(f) {
     var code = rahmen ? rahmen.dataset.code : editor.getValue();
     var zeilen = code.split("\n");
@@ -516,7 +531,7 @@
     if (h.zeile && zeilen[h.zeile - 1] !== undefined && zeilen[h.zeile - 1].trim())
       m.append(codeBlock(zeilen[h.zeile - 1].replace(/\s+$/, ""), h.zeile));
     m.append(absatz(h.was));
-    if (h.tipp) m.append(absatz(h.tipp));
+    if (h.tipp) m.append(dokuVerweis(absatz(h.tipp), h.tipp));
     m.append(absatz("Python meldet: " + original, "tu-python"));
     if (h.mehr || h.beispiel) {
       var d = document.createElement("details"); d.className = "bk-hinweis";

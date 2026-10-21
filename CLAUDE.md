@@ -29,6 +29,8 @@ Fachliche Doku (Aufbau, Bedienung, Speichern, Teilen): siehe `README.md`.
   als Text (textContent), streng prüfen (`kurs.js`). Geprüft wird nur die Zeichnung (`pruefung.js`),
   nie der Code; keine Lösungen in Kurs-Repos. Neue Felder im Format: in `kurs.js` prüfen und im
   README («Aufgabenformat») dokumentieren.
+- Doku (`befehle.js`, `doku.js`): Beispiele nie einfügen oder kopierbar machen (abtippen). Jedes
+  Beispiel muss mit `from turtle import *` davor im Tool fehlerfrei laufen.
 - Nichts darf beim Tippen oder Ausführen das Layout darüber verschieben (feste Höhen für
   wechselnde Statuszeilen).
 - Offline: neue Dateien in `DATEIEN` in `sw.js` eintragen; `vendor/` geändert → `VERSION` hochzählen.
@@ -48,7 +50,8 @@ kaputter Link, Kursmodus (Server im Ordner über `turtle/` und `turtle-aufgaben/
 Scratchpad-Ordner mit Symlinks auf beide Repos; Lernpfad, Weiter/Zurück, Übersicht, Einklappen,
 Vorhersage mit «Ohne Vorhersage starten», Freigabe weich und mit `freigabe`, Prüfung,
 Selbst-Abhaken, `weiterVon`, Neuladen, kaputter oder fehlender Kurs, Kurs offline), Spiel mit `onkey`/`ontimer` (Tasten ohne Klick,
-Pause), `pruefung.js` und `kurs.js` direkt mit node, Handy-Breite (kein horizontales Scrollen), Hell/Dunkel, Zoom beim Verlassen des
+Pause), Doku (alle Beispiele im Tool ausführen, Suche mit node über `befehle.js`, Sprung aus
+Kurzhilfe und Fehlerhilfe, Esc vor Vollbild), `pruefung.js` und `kurs.js` direkt mit node, Handy-Breite (kein horizontales Scrollen), Hell/Dunkel, Zoom beim Verlassen des
 Feldes, Koordinatensystem, Zeiger-Koordinaten (gezoomt mit `onscreenclick` vergleichen), Vollbild Programm/Feld
 (Desktop, iPad quer/hoch, Handy: Feld ganz sichtbar, kein Scrollen der Seite), Fehlermeldungen (`fehlerhilfe.js` direkt mit node prüfen), offline
 (`context.setOffline(true)`: Seite offen ohne Service Worker, und mit Service Worker neu laden).

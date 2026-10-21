@@ -70,9 +70,31 @@ vendor/                   Skulpt 1.2.0, CodeMirror 5.65.18, lz-string 1.5.0 (mit
 
 Unter dem Editor steht in einer Zeile mit fester Höhe, was der Befehl unter dem Cursor macht,
 z. B. «`circle(radius, winkel, ecken)` Kreis mit der Mitte links der Turtle …». Sie erscheint auch,
-während man die Argumente in den Klammern tippt; Texte und Kommentare zählen nicht. Die Liste
-steht in `assets/befehle.js` (Turtle-Befehle, die im Tool gehen, dazu Python-Befehle und
-Schlüsselwörter wie `for` und `def`; ohne DOM, mit node testbar).
+während man die Argumente in den Klammern tippt; Texte und Kommentare zählen nicht. Ein Klick auf
+den Befehl öffnet ihn in der Doku. Die Liste steht in `assets/befehle.js` (Turtle-Befehle, die im
+Tool gehen, dazu Python-Befehle und Schlüsselwörter wie `for` und `def`; ohne DOM, mit node testbar).
+
+## Doku
+
+Knopf «Doku» beim Programm (frei und im Kurs gleich, unabhängig von der Aufgabe). Die Doku öffnet
+sich als Seitenleiste rechts über der Seite; der Editor bleibt bedienbar, nichts verschiebt sich.
+Esc oder «Schliessen» schliesst sie (im Vollbild zuerst die Doku, dann das Vollbild).
+
+- **Anleitungen** für das, was man zeichnen will, z. B. Quadrat, Rechteck, Vieleck, Stern, Kreis um
+  einen Mittelpunkt, Bogen, Fläche füllen, Springen ohne Linie, Text, Spirale, Zufall, Tasten,
+  Animation; je ein Satz, ein kurzes Programm und die Befehle dazu.
+- **Befehle** nach Gruppen (Bewegen, Drehen, Stift, Farben … und Python: Grundbefehle, Zufall,
+  Listen, Schleifen und Bedingungen, eigene Befehle); je Aufruf, Erklärung, Beispiel, «Siehe auch».
+- **Suche** über Namen und deutsche Stichwörter («rechteck», «füllen», «dicker», «taste»), ohne
+  Rücksicht auf Gross/Klein und ä/ae, auch Wortteile («eck») und ein Tippfehler («foward»). Der
+  beste Treffer ist aufgeklappt. Ohne Suchwort: alles nach Gruppen, mit «Gruppe …» zum Springen.
+- Die Beispiele lassen sich bewusst nicht einfügen oder markieren: Sie sollen abgetippt werden.
+- Aus der Fehlerhilfe («Meinten Sie «forward»?») führt ein Knopf zum Eintrag.
+- Im Vollbild «Programm» ist die Doku etwas grösser (Beamer).
+
+Daten und Suche in `assets/befehle.js` (Zusatz je Befehl: `bsp`, `such`, `siehe`; Anleitungen in
+`ANLEITUNGEN`), die Oberfläche in `assets/doku.js`. Alle Beispiele müssen mit
+`from turtle import *` davor im Tool fehlerfrei laufen.
 
 ## Spiele (Tasten, Klicks, Timer)
 
@@ -330,10 +352,8 @@ Die leere Datei `.nojekyll` im Root muss bestehen bleiben.
 
 Besprochen, aber noch nicht umgesetzt:
 
-- **Befehlsübersicht mit Suche:** Knopf «Befehle» beim Programm, Seitenleiste mit Gruppen (Bewegen,
-  Drehen, Stift, Farben …, Python), Suche auch über deutsche Wörter, je Eintrag Aufruf, Satz und
-  Beispiel, «Einfügen» an der Cursorstelle (offen: ob «Einfügen» und die Gruppe Python dazugehören).
-  Daten aus `assets/befehle.js`; Sprung aus der Fehlerhilfe («Meinten Sie «forward»?») zum Eintrag.
+- **Befehle zur Aufgabe:** optional `"befehle": ["forward", "left"]` in `kurs.json`; in der
+  Aufgabenkarte als Verweise in die Doku.
 - **Einzelschritt** wie in Kara, aufbauend auf der Markierung der laufenden Zeile.
 - **Antworten zu den Fragen:** Antwortfelder zu allen Fragen, «Antworten kopieren» (z. B. für
   OneNote) und als Kommentar in der heruntergeladenen `.py`-Datei; freiwillige Erklärung, die erst

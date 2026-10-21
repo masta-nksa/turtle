@@ -404,3 +404,54 @@ body[data-vollbild] .tu-kurs{display:none}
 .tu-aktivzeile{background:var(--aktivzeile)}
 .tu-aktivrand .CodeMirror-linenumber{color:var(--accent);font-weight:600}
 .tu-aktivrand .CodeMirror-linenumber::before{content:"▶";position:absolute;left:2px;font-size:.7em;line-height:inherit}
+
+/* ---------- Doku (Seitenleiste rechts, über der Seite) ---------- */
+.tu-doku{
+  position:fixed;top:0;right:0;bottom:0;z-index:25;width:min(100vw,460px);display:flex;flex-direction:column;
+  background:var(--surface);color:var(--ink);border-left:1px solid var(--line);box-shadow:-8px 0 30px rgba(0,0,0,.25);
+}
+.tu-doku[hidden]{display:none}
+.tu-doku-kopf{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line)}
+.tu-doku-kopf h2{margin:0;flex:1}
+.tu-doku-suchzeile{display:flex;gap:8px;padding:12px 16px 0}
+.tu-doku-suche{
+  flex:1;min-width:0;font:inherit;font-size:1rem;min-height:44px;padding:8px 12px;
+  color:var(--ink);background:var(--surface);border:1px solid var(--ink-soft);border-radius:var(--radius);
+}
+.tu-doku-suche:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.tu-doku-suchzeile .tu-wahl{flex:none;max-width:42%}
+.tu-doku-suchzeile .tu-wahl[hidden]{display:none}
+.tu-doku-info{margin:0;padding:6px 16px;height:1.5em;box-sizing:content-box;font-size:.82rem;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tu-doku-liste{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:0 16px 32px;border-top:1px solid var(--line)}
+.tu-doku-liste h3{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--accent);margin:18px 0 2px;font-weight:600;
+}
+.tu-doku-eintrag{border-bottom:1px solid var(--line);border-radius:var(--radius);transition:background-color .4s}
+.tu-doku-eintrag.blinkt{background:var(--accent-soft)}
+.tu-doku-eintrag summary{cursor:pointer;padding:8px 4px;list-style:none;display:block}
+.tu-doku-eintrag summary::-webkit-details-marker{display:none}
+.tu-doku-eintrag summary::before{content:"▸";display:inline-block;width:1em;color:var(--ink-soft)}
+.tu-doku-eintrag[open] summary::before{content:"▾"}
+.tu-doku-eintrag summary:focus-visible{outline:3px solid var(--accent);outline-offset:-3px}
+.tu-doku-eintrag summary code{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.88rem;font-weight:600;color:var(--accent);overflow-wrap:anywhere}
+.tu-doku-eintrag summary b{font-weight:600}
+.tu-doku-eintrag summary small{font-size:.72rem;color:var(--ink-soft);margin-left:4px}
+.tu-doku-eintrag summary span{display:block;margin-left:1em;font-size:.88rem;color:var(--ink-soft)}
+.tu-doku-inhalt{padding:0 4px 12px 1.25em;display:flex;flex-direction:column;gap:8px;font-size:.88rem}
+.tu-doku-inhalt p{margin:0;color:var(--ink-soft)}
+/* Beispiele zum Abtippen: nicht markier- und kopierbar */
+.tu-doku-bsp{
+  margin:0;padding:8px 10px;font:.85rem/1.5 "IBM Plex Mono",ui-monospace,monospace;white-space:pre;overflow:auto;
+  color:var(--ink);background:var(--ground);border:1px solid var(--line);border-radius:var(--radius);
+  user-select:none;-webkit-user-select:none;
+}
+.tu-dokulink{
+  font:inherit;padding:0;margin:0;border:0;background:none;color:var(--accent);cursor:pointer;
+  text-decoration:underline;text-underline-offset:2px;
+}
+.tu-doku-siehe .tu-dokulink{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.85rem;min-height:28px}
+.tu-dokulink:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.tu-kurzhilfe .tu-dokulink{text-decoration:none}
+.tu-kurzhilfe .tu-dokulink:hover code{text-decoration:underline}
+body[data-vollbild="programm"] .tu-doku{zoom:1.25}

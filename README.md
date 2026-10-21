@@ -60,6 +60,11 @@ vendor/                   Skulpt 1.2.0, CodeMirror 5.65.18, lz-string 1.5.0 (mit
     (im Hochformat darunter).
   Wo der Browser es erlaubt, blendet der Vollbildmodus auch die Browserleisten aus; Esc oder
   «Verkleinern» beendet ihn. Wo nicht (z. B. iPhone), füllt die Ansicht trotzdem das Fenster.
+- **Schriftgrösse** (Knöpfe «A−», «A+» neben «Vollbild» beim Programm): vergrössert oder verkleinert
+  nur den Programmtext im Editor, in Stufen von 73 % bis 280 %. Die Mitte zeigt die Grösse und setzt
+  sie beim Antippen zurück. Die normale Ansicht und das Vollbild «Programm» haben je eine eigene
+  Grösse; im Vollbild ist die Vorgabe 167 %, gut lesbar am Beamer. Beides merkt sich der Browser.
+  Strg/⌘ + Plus vergrössert wie gewohnt die ganze Seite.
 
 ## Kurzhilfe
 
@@ -261,6 +266,7 @@ löschen, die länger nicht besucht wurden; wichtige Programme darum herunterlad
 | `turtle.programme.v1` | alle Programme und welches offen ist |
 | `turtle.tempo.v1` | Stellung des Tempo-Reglers |
 | `turtle.koordinaten.v1` | Koordinatensystem ein/aus |
+| `turtle.schrift.v1` | Schriftgrösse im Editor, normal und im Vollbild (in px) |
 | `turtle.kurs.<kurs>.v1` | im Kurs: Programm je Aufgabe, erledigt (geprüft/selbst), Vorhersagen, zuletzt offene Aufgabe, Karte eingeklappt; `<kurs>` z. B. `turtle-aufgaben/beispiel` |
 
 Kara, Checks und Turtle liegen unter `masta-nksa.github.io` und teilen sich den

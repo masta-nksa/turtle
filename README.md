@@ -160,15 +160,15 @@ Dazu kommen `&reihe=…&aufgabe=…`; die Adresszeile folgt der gewählten Aufga
   «Ausprobieren» oder «Werkstatt», ★ Zusatzaufgabe, Selbstkontrolle, Konzepte zum Nachlesen), Text,
   Fragen, Checkliste, Ideenkarten, Bild, gestufte Hinweise, «Als erledigt markieren», «Link zum
   Teilen kopieren» (öffnet genau diese Aufgabe).
-- **Fragen «Vorher» und «Nachher»** (`vorher`, `nachher`) stehen unter dem Turtle-Feld (so
-  verschiebt beim Ausführen nichts die Seite darüber), als Antwortknöpfe mit Text oder kleinem Bild
-  oder als Zahl-Feld, wie in Kara.
-  - **Vorher:** Vor dem ersten Start wählt man eine Antwort (noch ohne Bewertung). «Start» hält
-    sonst an und bietet «Zur Frage «Vorher»» oder «Ohne Vorhersage starten». Nach dem Lauf: «Richtig
-    vorhergesagt» mit Erklärung, oder «Nicht ganz: Sie hatten … vorhergesagt», und man wählt
-    nochmals, bis es stimmt.
-  - **Nachher:** erscheint, sobald die Zeichnung zum Zielbild passt (ohne Zielbild nach dem ersten
-    Lauf), und wird sofort bewertet. Erst mit der richtigen Antwort ist die Aufgabe erledigt; dann
+- **Fragen «Vorher» und «Nachher»** (`vorher`, `nachher`): Antwortknöpfe mit Text oder kleinem
+  Bild oder ein Zahl-Feld, wie in Kara.
+  - **Vorher** steht in der Aufgabenkarte unter dem Text. Bis eine Antwort gewählt ist (noch ohne
+    Bewertung), ist «Start» ausgesetzt; die Zustandszeile sagt «Zuerst oben «Vorher» beantworten.».
+    Daneben «Ohne Vorhersage starten». Nach dem Lauf: In der Karte eine kurze Rückmeldung (feste
+    Höhe, damit nichts springt), unter dem Feld «Richtig vorhergesagt» mit Erklärung oder «Nicht
+    ganz: Sie hatten … vorhergesagt»; man wählt nochmals, bis es stimmt.
+  - **Nachher** steht unter dem Turtle-Feld, erscheint, sobald die Zeichnung zum Zielbild passt
+    (ohne Zielbild nach dem ersten Lauf), und wird sofort bewertet. Erst mit der richtigen Antwort ist die Aufgabe erledigt; dann
     kommt «Nächste Aufgabe».
 - **Ideenkarten** (`ideen`, für Werkstätten): aufklappbare Karten mit einer Anregung, wahlweise
   mit «Startcode dieser Idee übernehmen» (fragt zuerst).

@@ -391,6 +391,8 @@
     if (werkzeug === "frage") { $("fwId").value = a.id; $("fwId").dispatchEvent(new Event("input")); }
     frageZeigen("vorher");
     frageZeigen("nachher");
+    vorherMeldungZeigen();
+    startSperreSetzen();
     statusZeigen();
     pfadZeigen();
     naviZeigen();
@@ -506,6 +508,7 @@
       teil(aufg).l = 1;
       speichern();
       if (!abschliessen(aufg)) statusZeigen();
+      if (aufg.vorher) { startSperreSetzen(); rueckZeigen("vorher"); }
     }
     if (aufg && aufg.vorhersage) {
       var v = vorhersage(aufg);
@@ -519,6 +522,7 @@
       var zu = el("button", "bk-knopf primaer", "Zur Frage «Vorher»"), oh = el("button", "bk-knopf", "Ohne Vorhersage starten");
       zu.type = oh.type = "button";
       zu.addEventListener("click", function () {
+        if (st.zu) { st.zu = false; speichern(); einklappenZeigen(); }
         $("vorherBox").scrollIntoView({ block: "center", behavior: "smooth" });
         var b = $("vorherAntworten").querySelector("button, input");
         if (b) b.focus({ preventScroll: true });
@@ -526,7 +530,7 @@
       oh.addEventListener("click", function () { $("pruefung").hidden = true; A.starten(); });
       var kn = el("div", "tu-knoepfe");
       kn.append(zu, oh);
-      pruefungZeigen("", "Zuerst vorhersagen", ["Beantworten Sie zuerst die Frage «Vorher». Danach sehen Sie, ob Sie recht hatten."], kn);
+      pruefungZeigen("", "Zuerst vorhersagen", ["Beantworten Sie zuerst oben bei der Aufgabe die Frage «Vorher». Danach sehen Sie, ob Sie recht hatten."], kn);
       return false;
     }
     if (!aufg || !aufg.vorhersage) return true;
@@ -554,8 +558,9 @@
       t.r = 1;
       if (t.v !== undefined && K.antwortRichtig(aufg, "vorher", t.v)) { t.vf = 1; t.vo = 1; }
       speichern();
+      if (!abschliessen(aufg)) statusZeigen();
       frageZeigen("vorher");
-      abschliessen(aufg);
+      vorherMeldungZeigen();
     } else if (neu) speichern();
     if (neu && aufg.nachher && !aufg.ziel) frageZeigen("nachher");
   }
@@ -615,10 +620,47 @@
 
   /* ---------- Fragen vorher und nachher ------------------------- */
 
-  // vorher: vor dem ersten Start wählen (noch ohne Bewertung), nach dem Lauf aufgelöst; danach
-  // weiter wählen, bis die Antwort stimmt. nachher: erscheint, wenn das Zielbild erreicht ist
-  // (ohne Zielbild nach dem ersten Lauf), und wird sofort bewertet. Beide Boxen stehen unter dem
-  // Feld: Was beim Ausführen dazukommt, verschiebt nur, was darunter liegt.
+  // vorher: in der Aufgabenkarte; vor dem ersten Start wählen (noch ohne Bewertung), bis dahin ist
+  // «Start» ausgesetzt (oder «Ohne Vorhersage starten»). Nach dem Lauf aufgelöst; danach weiter
+  // wählen, bis die Antwort stimmt. Die Karte zeigt nur kurze Rückmeldungen mit fester Höhe, die
+  // Erklärung steht unter dem Feld (#vorherMeldung): Was beim Ausführen dazukommt, verschiebt nur,
+  // was darunter liegt. nachher: unter dem Feld, erscheint mit dem Zielbild (ohne Zielbild nach dem
+  // ersten Lauf) und wird sofort bewertet.
+  function vorherWartet(a) {
+    var t = teilVon(a);
+    return !!(a.vorher && !t.l && t.v === undefined);
+  }
+  function startSperreSetzen() {
+    var warten = !!aufg && vorherWartet(aufg) && !(freigabe(aufg) || {}).gesperrt;
+    // nach dem ersten Start nur unsichtbar: Der Platz bleibt, damit nichts springt
+    $("vorherOhne").style.visibility = aufg && aufg.vorher && !teilVon(aufg).l ? "" : "hidden";
+    A.startSperren(warten ? "Zuerst oben «Vorher» beantworten." : null);
+    if (warten && st.zu) { st.zu = false; speichern(); einklappenZeigen(); }
+  }
+  $("vorherOhne").addEventListener("click", function () {
+    $("pruefung").hidden = true;
+    A.startSperren(null);
+    A.starten();
+  });
+  function vorherMeldungZeigen() {
+    var m = $("vorherMeldung"), f = aufg && aufg.vorher, t = aufg ? teilVon(aufg) : {};
+    m.hidden = !(f && t.r);
+    if (m.hidden) return;
+    m.className = "bk-meldung" + (t.vo ? " ok" : "");
+    m.textContent = "";
+    function absatzMit(text) { var q = el("p"); zeileFuellen(q, flach(text)); m.append(q); }
+    if (t.vo) {
+      m.append(el("strong", null, t.vf ? "Richtig vorhergesagt" : "Jetzt stimmt es"));
+      if (f.erklaerung) absatzMit(f.erklaerung);
+      if (erledigt(aufg).g && !aufg.nachher) { var n = naechsteKnopf(); if (n) m.append(n); }
+    } else if (t.v === undefined) {
+      m.append(el("strong", null, "Ohne Vorhersage gestartet"));
+      absatzMit("Wählen Sie oben bei «Vorher» die Antwort, die zum Ergebnis passt.");
+    } else {
+      m.append(el("strong", null, "Nicht ganz"));
+      absatzMit("Sie hatten «" + antwortName(f, t.v) + "» vorhergesagt. Vergleichen Sie mit dem Ergebnis und wählen Sie oben bei «Vorher» nochmals.");
+    }
+  }
   function antwortName(f, w) {
     if (f.typ === "zahl") return String(w);
     var x = f.antworten[w];
@@ -673,26 +715,24 @@
     r.textContent = "";
     function satz(kopf, rest) { if (kopf) r.append(el("strong", null, kopf + " ")); zeileFuellen(r, flach(rest || "")); }
     if (hinweis) { satz("", hinweis); return; }
-    if (art === "vorher" && !t.r) {
-      if (t.v === undefined) satz("", f.typ === "zahl" ? "Schreiben Sie Ihre Vorhersage auf, dann «Start»." : "Wählen Sie eine Antwort, dann «Start».");
-      else satz("", "Ihre Vorhersage: «" + antwortName(f, t.v) + "». Drücken Sie jetzt «Start» und vergleichen Sie.");
+    if (art === "vorher") {
+      if (!t.r) {
+        if (t.v === undefined) satz("", (f.typ === "zahl" ? "Schreiben Sie Ihre Vorhersage auf." : "Wählen Sie eine Antwort.") + " Erst dann geht «Start».");
+        else if (t.l) satz("", "Ihre Vorhersage: «" + antwortName(f, t.v) + "». Das Programm läuft …");
+        else satz("", "Ihre Vorhersage: «" + antwortName(f, t.v) + "». Jetzt «Start» drücken.");
+      } else if (t.vo) { r.classList.add("ok"); satz(t.vf ? "✓ Richtig vorhergesagt." : "✓ Richtig.", "Erklärung unter dem Feld."); }
+      else if (t.vw === undefined) { r.classList.add("fehler"); satz(t.v === undefined ? "Ohne Vorhersage gestartet." : "Nicht ganz.", "Wählen Sie, was zur Zeichnung passt."); }
+      else { r.classList.add("fehler"); satz("Noch nicht.", "Schauen Sie Programm und Zeichnung genau an."); }
       return;
     }
-    var ok = art === "vorher" ? t.vo : t.n;
+    var ok = t.n;
     if (ok) {
       r.classList.add("ok");
-      satz(art === "vorher" && t.vf ? "Richtig vorhergesagt." : "Richtig.", f.erklaerung);
-      if (erledigt(aufg).g && art === (aufg.nachher ? "nachher" : "vorher")) {
+      satz("Richtig.", f.erklaerung);
+      if (erledigt(aufg).g) {
         var n = naechsteKnopf();
         if (n) { r.append(el("br")); r.append(n); }
       }
-      return;
-    }
-    if (art === "vorher") {
-      r.classList.add("fehler");
-      if (t.v === undefined) satz("Ohne Vorhersage gestartet.", "Was hat das Programm gemacht? Wählen Sie jetzt die passende Antwort.");
-      else if (t.vw === undefined) satz("Nicht ganz.", "Sie hatten «" + antwortName(f, t.v) + "» vorhergesagt. Vergleichen Sie mit dem Ergebnis und wählen Sie nochmals.");
-      else satz("Noch nicht.", "Schauen Sie sich das Programm und das Ergebnis nochmals Zeile für Zeile an.");
       return;
     }
     if (t.nw === undefined) { r.hidden = false; satz("", f.typ === "zahl" ? "Geben Sie eine Zahl ein." : "Wählen Sie eine Antwort."); return; }
@@ -711,6 +751,7 @@
       var m = $("pruefung");
       if (!m.hidden && m.textContent.indexOf("Zuerst vorhersagen") === 0) m.hidden = true;
       frageZeigen(art);
+      startSperreSetzen();
       return;
     }
     if (art === "vorher" ? t.vo : t.n) return;
@@ -720,6 +761,7 @@
     speichern();
     abschliessen(aufg);
     frageZeigen(art);
+    if (art === "vorher") vorherMeldungZeigen();
     statusZeigen();
   }
 

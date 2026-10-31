@@ -354,12 +354,15 @@
     spiel: "Läuft weiter: wartet auf Tasten, Klicks oder den Timer.",
     eingabe: "Wartet auf Ihre Eingabe …", fertig: "Fertig.", fehler: "Abgebrochen wegen eines Fehlers."
   };
+  // startSperre: Text, warum «Start» noch nicht geht (Kursmodus: zuerst die Frage «Vorher»)
+  var startSperre = null;
   function setzeZustand(z) {
     zustand = z;
-    $("zustand").textContent = ZUSTAND_TEXT[z];
+    var steht = z !== "laeuft" && z !== "eingabe" && z !== "spiel" && z !== "pause";
+    $("zustand").textContent = startSperre && steht ? startSperre : ZUSTAND_TEXT[z];
     var st = $("knopfStart");
     st.textContent = (z === "laeuft" || z === "eingabe" || z === "spiel") ? "Pause" : (z === "pause" ? "Weiter" : "Start");
-    st.disabled = z === "eingabe" || gesperrt;
+    st.disabled = z === "eingabe" || gesperrt || !!(startSperre && steht);
   }
 
   function faktor() { return TEMPO[Number($("tempo").value) - 1] || 1; }
@@ -871,6 +874,8 @@
       setzeZustand(zustand);
     },
     vorlage: function (svg) { vorlageSvg = svg || ""; rasterZeichnen(); },
+    // Kursmodus: «Start» aussetzen (Text in der Zustandszeile) oder mit null wieder freigeben
+    startSperren: function (text) { startSperre = text || null; setzeZustand(zustand); },
     farbeText: farbeText
   };
   schriftZeigen();

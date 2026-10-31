@@ -60,6 +60,15 @@
       <p class="tu-freigabe" id="freigabe" hidden></p>
       <p class="tu-etiketten" id="etiketten" hidden></p>
       <div class="tu-text" id="aufgabeText"></div>
+      <fieldset class="bk-frage tu-vorher" id="vorherBox" hidden>
+        <legend>Vorher: Ihre Vorhersage</legend>
+        <p class="bk-frage-text" id="vorherText"></p>
+        <div class="bk-frage-antworten" id="vorherAntworten"></div>
+        <div class="tu-vorher-fuss">
+          <p class="bk-frage-rueck" id="vorherRueck" role="status" aria-live="polite"></p>
+          <button type="button" class="bk-knopf tu-klein" id="vorherOhne">Ohne Vorhersage starten</button>
+        </div>
+      </fieldset>
       <ol class="tu-fragen" id="fragen" hidden></ol>
       <div class="tu-vorhersage" id="vorhersage" hidden>
         <label for="vorhersageText">Ihre Vorhersage: Was wird dieses Programm zeichnen? Schreiben Sie es auf, bevor Sie «Start» drücken.</label>
@@ -160,12 +169,7 @@
         <p class="bk-schritt" id="zustand" aria-live="polite"></p>
 
         <div class="bk-meldung fehler" id="meldung" role="alert" hidden></div>
-        <fieldset class="bk-frage" id="vorherBox" hidden>
-          <legend>Vorher: Ihre Vorhersage</legend>
-          <p class="bk-frage-text" id="vorherText"></p>
-          <div class="bk-frage-antworten" id="vorherAntworten"></div>
-          <p class="bk-frage-rueck" id="vorherRueck" role="status" aria-live="polite"></p>
-        </fieldset>
+        <div class="bk-meldung" id="vorherMeldung" role="status" aria-live="polite" hidden></div>
         <div class="bk-meldung" id="pruefung" role="status" aria-live="polite" hidden></div>
         <fieldset class="bk-frage" id="nachherBox" hidden>
           <legend>Nachher: Frage zum Programm</legend>

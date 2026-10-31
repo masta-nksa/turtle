@@ -372,6 +372,14 @@ body[data-vollbild] .tu-kurs{display:none}
 .bk-frage-rueck.ok{background:var(--ok-soft)}
 .bk-frage-rueck.fehler{background:var(--no-soft)}
 .bk-frage-rueck .bk-knopf{margin-top:8px}
+/* Vorher in der Aufgabenkarte: Rückmeldung mit fester Höhe (die Erklärung steht unter dem Feld) */
+.tu-vorher{margin-top:10px;border-color:var(--accent);background:var(--accent-soft)}
+.tu-vorher .bk-chip:not(.gewaehlt):not(.richtig):not(.falsch){background:var(--surface)}
+.tu-vorher-fuss{display:flex;flex-wrap:wrap;align-items:flex-start;gap:6px 10px}
+.tu-vorher .bk-frage-rueck{flex:1 1 16em;margin:4px 0 0 !important;min-height:3em;background:var(--surface)}
+.tu-vorher .bk-frage-rueck.ok{background:var(--ok-soft)}
+.tu-vorher .bk-frage-rueck.fehler{background:var(--no-soft)}
+#vorherOhne{margin-top:4px}
 
 /* Ideenkarten (Werkstatt) */
 .tu-ideen{margin-top:10px}

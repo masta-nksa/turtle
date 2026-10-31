@@ -148,30 +148,47 @@ Dazu kommen `&reihe=…&aufgabe=…`; die Adresszeile folgt der gewählten Aufga
 - **Lernpfad:** Die Reihen (Einheiten) stehen als Kreise in einer Zeile; der Ring zeigt den Anteil
   erledigter Pflichtaufgaben, beim Darüberfahren erscheint der Titel. Daneben die aktuelle Reihe mit
   «erledigt / Pflicht». Darunter die Aufgaben der Reihe als Stationen einer Linie, gegliedert nach
-  Abschnitten («Entdecken», «Konzepte sichern», «Lernkontrolle»): grün = automatisch geprüft,
-  grau = selbst abgehakt, Ring = aktuelle Aufgabe, eckig = Lernkontrolle, ★ neben der Linie =
-  Zusatzaufgabe. Beim Darüberfahren erscheint der Titel. Auf dem Handy lassen sich beide Zeilen
+  Abschnitten (im Beispielkurs «Einstieg», «Üben», «Werkstatt», «Zusatz»): grün = automatisch
+  geprüft, grau = selbst abgehakt, Ring = aktuelle Aufgabe, eckig = Selbstkontrolle, grösser =
+  Werkstatt, ★ neben der Linie = Zusatzaufgabe. Beim Darüberfahren erscheint der Titel. Auf dem Handy lassen sich beide Zeilen
   waagrecht wischen.
 - **Übersicht** (Fenster): alle Reihen mit Abschnitten, Aufgaben, Stand und Balken; ein Klick
   öffnet die Aufgabe.
 - **Aufgabenkarte:** Ort («2 · Wiederholen · Entdecken · 5 von 14»), Titel, «‹ Zurück / Weiter ›»
   (durch alle Reihen; am Ende einer Reihe «Nächste Einheit ›»; weiterführende Reihen bilden je
-  einen eigenen Pfad), «Einklappen» (merkt sich der Browser). Darin Etiketten (★ Zusatzaufgabe,
-  Lernkontrolle, Konzepte zum Nachlesen), Text, Fragen, Checkliste, Bild, gestufte Hinweise,
-  «Als erledigt markieren», «Link zum Teilen kopieren» (öffnet genau diese Aufgabe).
+  einen eigenen Pfad), «Einklappen» (merkt sich der Browser). Darin Etiketten (Art der Aufgabe wie
+  «Ausprobieren» oder «Werkstatt», ★ Zusatzaufgabe, Selbstkontrolle, Konzepte zum Nachlesen), Text,
+  Fragen, Checkliste, Ideenkarten, Bild, gestufte Hinweise, «Als erledigt markieren», «Link zum
+  Teilen kopieren» (öffnet genau diese Aufgabe).
+- **Fragen «Vorher» und «Nachher»** (`vorher`, `nachher`) stehen unter dem Turtle-Feld (so
+  verschiebt beim Ausführen nichts die Seite darüber), als Antwortknöpfe mit Text oder kleinem Bild
+  oder als Zahl-Feld, wie in Kara.
+  - **Vorher:** Vor dem ersten Start wählt man eine Antwort (noch ohne Bewertung). «Start» hält
+    sonst an und bietet «Zur Frage «Vorher»» oder «Ohne Vorhersage starten». Nach dem Lauf: «Richtig
+    vorhergesagt» mit Erklärung, oder «Nicht ganz: Sie hatten … vorhergesagt», und man wählt
+    nochmals, bis es stimmt.
+  - **Nachher:** erscheint, sobald die Zeichnung zum Zielbild passt (ohne Zielbild nach dem ersten
+    Lauf), und wird sofort bewertet. Erst mit der richtigen Antwort ist die Aufgabe erledigt; dann
+    kommt «Nächste Aufgabe».
+- **Ideenkarten** (`ideen`, für Werkstätten): aufklappbare Karten mit einer Anregung, wahlweise
+  mit «Startcode dieser Idee übernehmen» (fragt zuerst).
 - **Vorhersage** (`vorhersage: true`): ein Feld «Ihre Vorhersage». Ist es leer, hält «Start» beim
   ersten Mal an und bietet «Vorhersage aufschreiben» oder «Ohne Vorhersage starten». Nach dem ersten
   Start: «Stimmte Ihre Vorhersage? Ja / Teilweise / Nein». Text und Antwort bleiben im Browser.
-- **Lernkontrollen** zeigen einen Hinweis, solange die Pflichtaufgaben davor nicht erledigt sind
-  («Empfohlen, wenn …»), und sind im Pfad blasser. Mit `freigabe` (Anteil, z. B. 0.7) bei der Reihe
-  öffnen sie sich erst ab diesem Anteil; vorher lässt sich das Programm nur lesen.
+- **Selbstkontrollen** (`kontrolle`, im Beispielkurs zugleich ★) zeigen einen Hinweis, solange die
+  Pflichtaufgaben davor nicht erledigt sind («Empfohlen, wenn …»), und sind im Pfad blasser. Mit
+  `freigabe` (Anteil, z. B. 0.7) bei der Reihe öffnen sie sich erst ab diesem Anteil; vorher lässt
+  sich das Programm nur lesen.
 - **Konzepte** (Knopf oben): Erklärungen mit Beispielen, die zum Kurs gehören.
 - **Programm je Aufgabe:** Beim ersten Öffnen steht der Startcode da (oder bei `weiterVon` das
   eigene Programm der genannten Aufgabe). «Zurück zum Startcode» fragt zuerst. «Neu», «Beispiele»
   und «Meine Programme» sind im Kurs ausgeblendet; «Programm als Link kopieren» und
   «Herunterladen (.py)» bleiben.
 - **Erledigt** auf zwei Wegen: automatisch geprüft (grüner Haken) oder selbst abgehakt (grauer
-  Haken, lässt sich zurücknehmen). Gespeichert wird beides getrennt.
+  Haken, lässt sich zurücknehmen). Gespeichert wird beides getrennt. Automatisch erledigt ist eine
+  Aufgabe, wenn alle ihre Teile stimmen: Zielbild (`ziel`), Frage `vorher`, Frage `nachher`, bei
+  `art: "ausprobieren"` der erste Start. Was noch fehlt, steht unter der Karte («Noch offen:
+  Frage «Nachher».»). Aufgaben ohne solche Teile hakt man selbst ab.
 - **Zielbild als Vorlage einblenden** (Schalter über dem Feld) legt das Ziel blass unter die
   Zeichnung; die Breite der Linien zeigt ungefähr die Toleranz.
 - Startcode läuft wie alles nur nach «Start». Kursdaten erscheinen nur als Text, nie als HTML.
@@ -240,12 +257,25 @@ eigener Pfad), `freigabe` (0–1: Lernkontrollen erst ab diesem Anteil erledigte
 | `konzepte` | ids aus `konzepte`; erscheinen als Etiketten |
 | `startcode` | Programm beim ersten Öffnen (sonst `from turtle import *`) |
 | `weiterVon` | id einer früheren Aufgabe: beim ersten Öffnen deren Programm übernehmen |
-| `vorhersage: true` | Hinweis «Überlegen Sie zuerst, was dieses Programm zeichnet …» |
+| `art` | `ausprobieren` (erledigt nach dem ersten Start), `vorhersagen`, `nachbauen`, `ordnen`, `fehler`, `werkstatt`, `knobeln`; erscheint als Etikett |
+| `vorher` | Frage vor dem ersten Start (Vorhersage), siehe unten |
+| `nachher` | Frage nach dem Zielbild (bzw. nach dem ersten Lauf), siehe unten |
+| `ideen` | Ideenkarten: Liste (1–12) von `{titel, text, startcode?}` |
+| `vorhersage: true` | älter: freies Textfeld «Ihre Vorhersage» mit Selbsteinschätzung (mit `vorher` übergangen) |
 | `zusatz: true` | ★, zählt nicht zum Pflichtfortschritt der Reihe |
-| `kontrolle: true` | Lernkontrolle: Etikett, keine Hinweise |
+| `kontrolle: true` | Selbstkontrolle: Etikett, keine Hinweise |
 | `bild` | Bild im Kursordner, z. B. `bilder/blume.png` (png, jpg, gif, svg, webp) |
 | `ziel` | Zielbild für die automatische Prüfung (unten) |
 | `bedingungen` | reserviert für Zusatzbedingungen (z. B. höchstens n Zeilen); noch ohne Wirkung |
+
+`vorher` und `nachher`: `{text, antworten, richtig, erklaerung}` (Auswahl, 2–8 Antworten) oder
+`{typ: "zahl", text, richtig, erklaerung}`. Eine Antwort ist ein Text oder ein Bild
+`{"bild": {"elemente": […]}, "text": "…"}` (Elemente wie bei `ziel`, z. B. aus dem
+Zielbild-Werkzeug; ohne `text` heisst sie «Bild 1», «Bild 2» …). `richtig` ist ein Schlüssel aus
+8 Zeichen, keine Klartext-Antwort: `frageSchluessel(id, "vorher" | "nachher", wert)` in `kurs.js`,
+mit `wert` = Nummer der Antwort ab 0 bzw. die Zahl (Komma oder Punkt; 30 und 30.0 gelten gleich).
+Erzeugen lässt er sich mit dem Fragen-Werkzeug (unten). `erklaerung` erscheint nach der richtigen
+Antwort.
 
 Texte (auch Konzepte, Fragen, Hinweise): Leerzeile = neuer Absatz, `` `…` `` = Code im Text,
 ` ``` ` auf eigenen Zeilen = Codeblock, `- ` am Zeilenanfang = Aufzählung, `## ` = Zwischentitel.
@@ -270,6 +300,19 @@ Mit `?werkzeug=ziel` (auch zusammen mit `?kurs=…`) erscheint unter dem Feld na
 Zeichnung als fertiges `ziel` zum Kopieren, wahlweise mit Farben. So lässt man die eigene Lösung
 laufen und übernimmt nur das Ergebnis; Koordinaten muss niemand von Hand ausrechnen.
 
+### Fragen-Werkzeug
+
+Mit `?werkzeug=frage` (auch zusammen mit `?kurs=…`; die id der offenen Aufgabe steht dann schon
+da) erscheint unter dem Feld ein kleines Formular: Aufgabe, Frage (`vorher`/`nachher`), richtige
+Antwort (Nummer ab 1 oder, mit «Zahl-Frage», die Zahl). Daneben steht der Schlüssel für
+`richtig`.
+
+## Editor: Einrückungslinien
+
+Führende Leerzeichen zeigt der Editor je Stufe (4 Leerzeichen) mit einem feinen senkrechten Strich
+(`addOverlay` in `app.js`, Klasse `cm-einzug` in `turtle.css`). Das hilft beim Einrücken von
+Schleifen, Verzweigungen und eigenen Befehlen.
+
 ## Speichern und Teilen
 
 - Jede Änderung bleibt im Browser (`localStorage`), auch nach dem Schliessen.
@@ -289,7 +332,7 @@ löschen, die länger nicht besucht wurden; wichtige Programme darum herunterlad
 | `turtle.tempo.v1` | Stellung des Tempo-Reglers |
 | `turtle.koordinaten.v1` | Koordinatensystem ein/aus |
 | `turtle.schrift.v1` | Schriftgrösse im Editor, normal und im Vollbild (in px) |
-| `turtle.kurs.<kurs>.v1` | im Kurs: Programm je Aufgabe, erledigt (geprüft/selbst), Vorhersagen, zuletzt offene Aufgabe, Karte eingeklappt; `<kurs>` z. B. `turtle-aufgaben/beispiel` |
+| `turtle.kurs.<kurs>.v1` | im Kurs: Programm je Aufgabe, erledigt (geprüft/selbst), Teile (gestartet, Zielbild, Antworten auf `vorher`/`nachher`), Vorhersagen, zuletzt offene Aufgabe, Karte eingeklappt; `<kurs>` z. B. `turtle-aufgaben/beispiel` |
 
 Kara, Checks und Turtle liegen unter `masta-nksa.github.io` und teilen sich den
 `localStorage`; die Präfixe `kara.` und `turtle.` halten sie auseinander.
@@ -362,7 +405,8 @@ Besprochen, aber noch nicht umgesetzt:
   API-Schlüssel im Tool). Das Tool kopiert Aufgabe, Antwort, Programm und Fehlermeldung in die
   Zwischenablage und öffnet den Agenten. Vorher mit der Informatik der Schule klären, ob
   Schülerinnen und Schüler Agenten nutzen dürfen und ob Kosten anfallen.
-- **Lernkontrollen und Zusatzbedingungen:** `bedingungen` auswerten (z. B. höchstens n Zeilen,
+- **Projekt zur Wahl** im Beispielkurs: Snake, Malprogramm oder generative Kunst.
+- **Zusatzbedingungen:** `bedingungen` auswerten (z. B. höchstens n Zeilen,
   verwendet `for`/`def`), angezeigt als Checkliste; Prüfung von `print`-Ausgaben.
 - **Korrekturansicht** für Lehrpersonen (`?werkzeug=korrektur`): abgegebene `.py`-Dateien laden,
   automatisch gegen das Zielbild prüfen, Tabelle mit Vorschau; Name und Aufgabe als Kopf in der

@@ -92,6 +92,14 @@
       "Cmd-Enter": function () { neuStarten(); }
     }
   });
+  // Einrückungslinien: führende Leerzeichen je 4 als «einzug» (feiner Strich am Anfang, turtle.css)
+  editor.addOverlay({
+    token: function (s) {
+      if (/^ *$/.test(s.string.slice(0, s.pos)) && s.match("    ")) return "einzug";
+      s.skipToEnd();
+      return null;
+    }
+  });
   ["autocapitalize", "autocorrect"].forEach(function (a) { editor.getInputField().setAttribute(a, "off"); });
   editor.getInputField().setAttribute("spellcheck", "false");
 
@@ -719,6 +727,23 @@
   $("zielKopieren").addEventListener("click", function () {
     var t = $("zielText"); t.focus(); t.select();
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t.value).catch(function () { /* markiert */ });
+  });
+
+  /* ---------- Fragen-Werkzeug (?werkzeug=frage) ----------------- */
+
+  // Für Lehrpersonen: Schlüssel «richtig» zu einer Antwort (kurs.js, frageSchluessel)
+  var werkzeugFrage = such.get("werkzeug") === "frage";
+  $("frageWerkzeug").hidden = !werkzeugFrage;
+  function frageWerkzeugRechnen() {
+    var K = window.TurtleKurs, id = $("fwId").value.trim(), w = $("fwWert").value.trim(), art = $("fwArt").value, aus;
+    if (!id || !w) aus = "–";
+    else if ($("fwZahl").checked) { var z = K.zahlText(w); aus = z === null ? "(keine Zahl)" : K.frageSchluessel(id, art, z); }
+    else { var n = Number(w); aus = Number.isInteger(n) && n >= 1 ? K.frageSchluessel(id, art, n - 1) : "(Nummer der Antwort ab 1)"; }
+    $("fwAus").textContent = aus;
+  }
+  ["fwId", "fwWert", "fwArt", "fwZahl"].forEach(function (i) {
+    $(i).addEventListener("input", frageWerkzeugRechnen);
+    $(i).addEventListener("change", frageWerkzeugRechnen);
   });
 
   // Farbangaben vereinheitlichen (Name, #rgb, rgb(…)) über den Browser: «#rrggbb», Deckkraft weg

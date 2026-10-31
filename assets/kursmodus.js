@@ -4,7 +4,8 @@
    die ganze Liste im Fenster «Übersicht». Kursdaten (kurs.js) erscheinen nur als Text.
    Jede Aufgabe hat ihr eigenes Programm; Fortschritt, Programme und Vorhersagen bleiben im
    Browser (turtle.kurs.<kurs>.v1). Erledigt ist eine Aufgabe, wenn die Zeichnung zum Zielbild
-   passt (pruefung.js) oder wenn sie selbst abgehakt ist; beides wird getrennt gespeichert.
+   passt (pruefung.js) und die Fragen «vorher»/«nachher» richtig beantwortet sind, oder wenn sie
+   selbst abgehakt ist; beides wird getrennt gespeichert.
    ============================================================ */
 (function () {
   "use strict";
@@ -38,11 +39,14 @@
   /* ---------- Speicher ---------------------------------------- */
 
   // vorhersagen: {id: {t: Text, l: 1 = schon gestartet, s: "ja"|"teilweise"|"nein"}}; zu: Karte eingeklappt
-  var st = { programme: {}, erledigt: {}, vorhersagen: {}, offen: null, zu: false };
+  // teile: {id: {l: gestartet, e: ein Lauf zu Ende, z: Zielbild erreicht, v: Vorhersage (Nummer oder Zahl),
+  //   r: aufgelöst, vf: Vorhersage stimmte, vo: «vorher» richtig, vw: letzte falsche Antwort danach,
+  //   vk: richtige Antwort danach, n: «nachher» richtig, nw: letzte Antwort zu «nachher»}}
+  var st = { programme: {}, erledigt: {}, vorhersagen: {}, teile: {}, offen: null, zu: false };
   try {
     var d = JSON.parse(localStorage.getItem(SPEICHER) || "null");
     if (d && typeof d === "object") {
-      ["programme", "erledigt", "vorhersagen"].forEach(function (k) { if (d[k] && typeof d[k] === "object") st[k] = d[k]; });
+      ["programme", "erledigt", "vorhersagen", "teile"].forEach(function (k) { if (d[k] && typeof d[k] === "object") st[k] = d[k]; });
       if (d.offen && typeof d.offen === "object") st.offen = d.offen;
       st.zu = d.zu === true;
     }
@@ -51,7 +55,30 @@
     try { localStorage.setItem(SPEICHER, JSON.stringify(st)); return true; } catch (e) { return false; }
   }
   function erledigt(a) { return st.erledigt[a.id] || {}; }
+  function teil(a) { return st.teile[a.id] || (st.teile[a.id] = {}); }
+  function teilVon(a) { return st.teile[a.id] || {}; }
 
+  // Automatisch erledigt, wenn alle Teile stimmen: Zielbild, Frage vorher, Frage nachher,
+  // bei «ausprobieren» der erste Start. Aufgaben ohne solche Teile hakt man selbst ab.
+  function automatisch(a) { return !!(a.ziel || a.vorher || a.nachher || a.art === "ausprobieren"); }
+  function fehlt(a) {
+    var t = teilVon(a), l = [];
+    if (a.art === "ausprobieren" && !t.l) l.push("einmal starten");
+    if (a.vorher && !t.vo) l.push("Frage «Vorher»");
+    if (a.ziel && !t.z) l.push("Zielbild");
+    if (a.nachher && !t.n) l.push("Frage «Nachher»");
+    return l;
+  }
+  function abschliessen(a) {
+    if (!automatisch(a) || fehlt(a).length || erledigt(a).g) return false;
+    var e = st.erledigt[a.id] || {};
+    e.g = 1;
+    st.erledigt[a.id] = e;
+    speichern();
+    if (a === aufg) { statusZeigen(); pfadZeigen(); }
+    return true;
+  }
+  function artName(a) { return a.kontrolle ? "Selbstkontrolle" : a.art ? K.ARTEN[a.art] : ""; }
   /* ---------- Text aus dem Kurs (nur textContent) -------------- */
 
   function zeileFuellen(ziel, teile) {
@@ -164,7 +191,7 @@
     return m ? m[0] : r.titel.charAt(0).toUpperCase() || String(i + 1);
   }
 
-  // Lernkontrolle: empfohlen, wenn die Pflichtaufgaben davor erledigt sind; mit «freigabe»
+  // Selbstkontrolle (kontrolle): empfohlen, wenn die Pflichtaufgaben davor erledigt sind; mit «freigabe»
   // (Anteil) der Reihe erst ab diesem Anteil offen.
   function freigabe(a) {
     if (!a.kontrolle) return null;
@@ -215,13 +242,13 @@
       ab.append(el("div", "bk-abschnitt-name", g.name));
       g.liste.forEach(function (a) {
         var e = erledigt(a), fg = freigabe(a);
-        var b = el("button", "bk-station" + (a.zusatz ? " zusatz" : "") + (a.kontrolle ? " kontrolle" : "") +
+        var b = el("button", "bk-station" + (a.zusatz ? " zusatz" : "") + (a.kontrolle ? " kontrolle" : "") + (a.art === "werkstatt" ? " werkstatt" : "") +
           (e.g ? " geprueft" : e.s ? " selbst" : "") + (fg ? (fg.gesperrt ? " gesperrt" : " spaeter") : ""));
         b.type = "button";
         if ((e.g || e.s) && !a.zusatz) b.textContent = "✓";
         var zustandText = e.g ? "automatisch geprüft" : e.s ? "selbst abgehakt" : fg && fg.gesperrt ? "noch gesperrt" : "";
-        b.dataset.titel = (a.zusatz ? "★ " : "") + a.titel + (zustandText ? " · " + zustandText : "");
-        b.setAttribute("aria-label", b.dataset.titel + (a.kontrolle ? ", Lernkontrolle" : ""));
+        b.dataset.titel = (a.zusatz ? "★ " : "") + (artName(a) ? artName(a) + ": " : "") + a.titel + (zustandText ? " · " + zustandText : "");
+        b.setAttribute("aria-label", b.dataset.titel);
         if (a === aufg) { b.classList.add("aktuell"); b.setAttribute("aria-current", "step"); aktuell = b; }
         b.addEventListener("click", function () { waehleAufgabe(a); });
         schildAn(b);
@@ -305,10 +332,11 @@
     };
   }
 
+  var werkzeug = new URLSearchParams(location.search).get("werkzeug") || "";
   function adresseSetzen() {
     try {
       var u = location.pathname + "?kurs=" + adr.wert + "&reihe=" + reihe.id + "&aufgabe=" + aufg.id +
-        (new URLSearchParams(location.search).get("werkzeug") === "ziel" ? "&werkzeug=ziel" : "");
+        (/^(ziel|frage)$/.test(werkzeug) ? "&werkzeug=" + werkzeug : "");
       history.replaceState(null, "", u);
     } catch (e) { /* Adresszeile bleibt */ }
   }
@@ -328,6 +356,7 @@
     freigabeZeigen(a);
     vorhersageZeigen(a);
     textZeigen($("aufgabeText"), a.text);
+    ideenZeigen(a);
     listeZeigen($("fragen"), a.fragen);
     listeZeigen($("checkliste"), a.checkliste);
     var bild = $("aufgabeBild");
@@ -347,7 +376,7 @@
     $("aufgabeMeldung").hidden = true;
 
     var fg = freigabe(a), zu = fg && fg.gesperrt;
-    var code = zu ? "# Diese Lernkontrolle ist noch gesperrt.\n" : typeof st.programme[a.id] === "string" ? st.programme[a.id] : startcode(a);
+    var code = zu ? "# Diese Selbstkontrolle ist noch gesperrt.\n" : typeof st.programme[a.id] === "string" ? st.programme[a.id] : startcode(a);
     A.sperren(false);
     A.programmLaden(code, zu ? { name: a.titel, speichern: function () { return true; } } : quelle(a));
     A.sperren(zu);
@@ -359,6 +388,9 @@
     $("vorlageSchalter").hidden = !a.ziel;
     vorlageSetzen();
     $("pruefung").hidden = true;
+    if (werkzeug === "frage") { $("fwId").value = a.id; $("fwId").dispatchEvent(new Event("input")); }
+    frageZeigen("vorher");
+    frageZeigen("nachher");
     statusZeigen();
     pfadZeigen();
     naviZeigen();
@@ -371,14 +403,14 @@
     return name;
   }
 
-  // Hinweis bei Lernkontrollen (und Sperre, wenn die Reihe «freigabe» hat)
+  // Hinweis bei Selbstkontrollen (und Sperre, wenn die Reihe «freigabe» hat)
   function freigabeZeigen(a) {
     var fg = freigabe(a), p = $("freigabe");
     p.hidden = !fg;
     p.classList.toggle("gesperrt", !!(fg && fg.gesperrt));
     if (!fg) return;
     p.textContent = fg.gesperrt
-      ? "Diese Lernkontrolle öffnet sich, wenn Sie mindestens " + Math.round(fg.anteil * 100) + " % der Aufgaben davor erledigt haben (bis jetzt " + fg.n + " von " + fg.von + ")."
+      ? "Diese Selbstkontrolle öffnet sich, wenn Sie mindestens " + Math.round(fg.anteil * 100) + " % der Aufgaben davor erledigt haben (bis jetzt " + fg.n + " von " + fg.von + ")."
       : "Empfohlen, wenn Sie die Aufgaben davor erledigt haben (" + fg.n + " von " + fg.von + ").";
   }
 
@@ -386,7 +418,8 @@
     var box = $("etiketten");
     box.textContent = "";
     if (a.zusatz) box.append(el("span", "tu-etikett zusatz", "★ Zusatzaufgabe"));
-    if (a.kontrolle) box.append(el("span", "tu-etikett kontrolle", "Lernkontrolle"));
+    if (a.kontrolle) box.append(el("span", "tu-etikett kontrolle", "Selbstkontrolle"));
+    else if (a.art) box.append(el("span", "tu-etikett art", K.ARTEN[a.art]));
     (a.konzepte || []).forEach(function (id) {
       var k = kurs.konzepte.filter(function (x) { return x.id === id; })[0];
       var b = el("button", "tu-etikett konzept", k.titel);
@@ -398,7 +431,7 @@
     box.hidden = !box.childNodes.length;
   }
 
-  // Hinweise gestuft wie in Kara: jeder weitere erst auf Klick; bei Lernkontrollen keine
+  // Hinweise gestuft wie in Kara: jeder weitere erst auf Klick; bei Selbstkontrollen keine
   function hinweiseZeigen() {
     var liste = aufg.kontrolle ? [] : (aufg.hinweise || []), box = $("hinweisListe");
     $("hinweisBox").hidden = !liste.length;
@@ -429,9 +462,13 @@
     var e = erledigt(aufg), s = $("aufgabeStatus");
     $("selbst").checked = !!e.s;
     s.className = "tu-status" + (e.g ? " ok" : e.s ? " selbst" : "");
-    s.textContent = e.g ? "✓ Automatisch geprüft: Die Zeichnung passt zum Zielbild."
+    var f = fehlt(aufg);
+    s.textContent = e.g ? (aufg.ziel ? "✓ Automatisch geprüft: Die Zeichnung passt zum Zielbild." : "✓ Automatisch geprüft.")
       : e.s ? "✓ Selbst als erledigt markiert."
-        : aufg.ziel ? "Noch offen. Nach «Start» wird die Zeichnung mit dem Zielbild verglichen." : "Noch offen.";
+        : !automatisch(aufg) ? "Noch offen."
+          : f.length === 1 && f[0] === "Zielbild" ? "Noch offen. Nach «Start» wird die Zeichnung mit dem Zielbild verglichen."
+            : f.length === 1 && f[0] === "einmal starten" ? "Noch offen. Starten Sie das Programm einmal."
+              : "Noch offen: " + f.join(", ") + ".";
   }
   $("selbst").addEventListener("change", function () {
     var e = st.erledigt[aufg.id] || {};
@@ -465,12 +502,33 @@
   A.hooks.zurueck = function () { $("pruefung").hidden = true; };
   A.hooks.start = function () {
     $("pruefung").hidden = true;
+    if (aufg && !teilVon(aufg).l) {
+      teil(aufg).l = 1;
+      speichern();
+      if (!abschliessen(aufg)) statusZeigen();
+    }
     if (aufg && aufg.vorhersage) {
       var v = vorhersage(aufg);
       if (!v.l) { v.l = 1; speichern(); vergleichZeigen(); }
     }
   };
   A.hooks.vorStart = function () {
+    if (aufg && aufg.vorher) {
+      var t = teilVon(aufg);
+      if (t.l || t.v !== undefined) return true;
+      var zu = el("button", "bk-knopf primaer", "Zur Frage «Vorher»"), oh = el("button", "bk-knopf", "Ohne Vorhersage starten");
+      zu.type = oh.type = "button";
+      zu.addEventListener("click", function () {
+        $("vorherBox").scrollIntoView({ block: "center", behavior: "smooth" });
+        var b = $("vorherAntworten").querySelector("button, input");
+        if (b) b.focus({ preventScroll: true });
+      });
+      oh.addEventListener("click", function () { $("pruefung").hidden = true; A.starten(); });
+      var kn = el("div", "tu-knoepfe");
+      kn.append(zu, oh);
+      pruefungZeigen("", "Zuerst vorhersagen", ["Beantworten Sie zuerst die Frage «Vorher». Danach sehen Sie, ob Sie recht hatten."], kn);
+      return false;
+    }
     if (!aufg || !aufg.vorhersage) return true;
     var v = vorhersage(aufg);
     if (v.l || vorhersageGenug(v.t)) return true;
@@ -487,27 +545,46 @@
     pruefungZeigen("", "Zuerst vorhersagen", ["Schreiben Sie oben bei der Aufgabe kurz auf, was das Programm zeichnen wird. Danach sehen Sie, ob Sie recht hatten."], knoepfe);
     return false;
   };
+  // Ein Lauf ist zu Ende (auch mit Fehler): Vorhersage auflösen, Frage «nachher» ohne Zielbild öffnen
+  function laufEnde() {
+    if (!aufg) return;
+    var t = teil(aufg), neu = !t.e;
+    t.e = 1;
+    if (aufg.vorher && t.l && !t.r) {
+      t.r = 1;
+      if (t.v !== undefined && K.antwortRichtig(aufg, "vorher", t.v)) { t.vf = 1; t.vo = 1; }
+      speichern();
+      frageZeigen("vorher");
+      abschliessen(aufg);
+    } else if (neu) speichern();
+    if (neu && aufg.nachher && !aufg.ziel) frageZeigen("nachher");
+  }
+  A.hooks.fehler = laufEnde;
   A.hooks.fertig = function (zeichnung, wartet) {
+    laufEnde();
     if (!aufg || !aufg.ziel || !zeichnung) return;
     if (zeichnung.voll) { pruefungZeigen("", "Nicht geprüft", ["Das Programm hat sehr viel gezeichnet; so viel kann nicht verglichen werden."]); return; }
     var r = P.vergleiche(aufg.ziel, zeichnung, farbeGleich);
     if (r.ok) {
-      var e = st.erledigt[aufg.id] || {};
-      e.g = 1;
-      st.erledigt[aufg.id] = e;
-      speichern();
-      statusZeigen();
-      pfadZeigen();
-      var n = nachbar(1), knopf = null;
-      if (n) {
-        knopf = el("button", "bk-knopf primaer", n.reiheObj === reihe ? "Nächste Aufgabe" : "Weiter zu «" + n.reiheObj.titel + "»");
-        knopf.type = "button";
-        knopf.addEventListener("click", function () {
-          waehleAufgabe(n);
-          window.scrollTo({ top: 0, behavior: "smooth" });
-        });
+      var t = teil(aufg), n = nachbar(1);
+      if (!t.z) { t.z = 1; speichern(); frageZeigen("nachher"); }
+      if (!abschliessen(aufg)) statusZeigen();
+      var offen = fehlt(aufg);
+      if (offen.length) {
+        var zur = null;
+        if (aufg.nachher && !t.n) {
+          zur = el("button", "bk-knopf primaer", "Zur Frage «Nachher»");
+          zur.type = "button";
+          zur.addEventListener("click", function () {
+            $("nachherBox").scrollIntoView({ block: "center", behavior: "smooth" });
+            var b = $("nachherAntworten").querySelector("button, input");
+            if (b) b.focus({ preventScroll: true });
+          });
+        }
+        pruefungZeigen("ok", "Die Zeichnung passt", ["Die Zeichnung passt zum Zielbild. Noch offen: " + offen.join(", ") + "."], zur);
+        return;
       }
-      pruefungZeigen("ok", "Geschafft", ["Die Zeichnung passt zum Zielbild." + (n ? "" : " Das war die letzte Aufgabe.")], knopf);
+      pruefungZeigen("ok", "Geschafft", ["Die Zeichnung passt zum Zielbild." + (n ? "" : " Das war die letzte Aufgabe.")], naechsteKnopf());
       return;
     }
     var s = [];
@@ -523,6 +600,183 @@
     if (!vorlageAn) s.push("Tipp: Blenden Sie das Zielbild als Vorlage ein.");
     pruefungZeigen("", "Noch nicht ganz", s);
   };
+
+  function naechsteKnopf() {
+    var n = nachbar(1);
+    if (!n) return null;
+    var knopf = el("button", "bk-knopf primaer", n.reiheObj === reihe ? "Nächste Aufgabe" : "Weiter zu «" + n.reiheObj.titel + "»");
+    knopf.type = "button";
+    knopf.addEventListener("click", function () {
+      waehleAufgabe(n);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+    return knopf;
+  }
+
+  /* ---------- Fragen vorher und nachher ------------------------- */
+
+  // vorher: vor dem ersten Start wählen (noch ohne Bewertung), nach dem Lauf aufgelöst; danach
+  // weiter wählen, bis die Antwort stimmt. nachher: erscheint, wenn das Zielbild erreicht ist
+  // (ohne Zielbild nach dem ersten Lauf), und wird sofort bewertet. Beide Boxen stehen unter dem
+  // Feld: Was beim Ausführen dazukommt, verschiebt nur, was darunter liegt.
+  function antwortName(f, w) {
+    if (f.typ === "zahl") return String(w);
+    var x = f.antworten[w];
+    return x ? (x.text || "Bild " + (Number(w) + 1)) : "?";
+  }
+  function frageZeigen(art) {
+    var f = aufg[art], box = $(art + "Box"), t = teilVon(aufg);
+    var offen = !!f && (art === "vorher" || (aufg.ziel ? !!t.z : !!t.e));
+    box.hidden = !offen;
+    if (!offen) return;
+    var p = $(art + "Text");
+    p.textContent = "";
+    zeileFuellen(p, flach(f.text));
+    var liste = $(art + "Antworten"), vorab = art === "vorher" && !t.r;
+    var fertigJetzt = art === "vorher" ? t.vo : t.n;
+    liste.textContent = "";
+    if (f.typ === "zahl") {
+      var inp = el("input", "bk-zahl"), k = el("button", "bk-knopf", vorab ? "Vorhersage festhalten" : "Prüfen");
+      inp.type = "text";
+      inp.setAttribute("inputmode", "decimal");
+      inp.setAttribute("autocomplete", "off");
+      inp.setAttribute("aria-label", "Ihre Antwort (Zahl)");
+      var alt = art === "vorher" ? (t.vo ? null : t.r ? t.vw : t.v) : t.nw;
+      if (fertigJetzt) { inp.value = art === "vorher" ? (t.vf ? t.v : t.vk) : t.nw; inp.disabled = true; k.hidden = true; }
+      else if (alt !== undefined && alt !== null) inp.value = alt;
+      k.type = "button";
+      k.addEventListener("click", function () { antworten(art, inp.value); });
+      inp.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); antworten(art, inp.value); } });
+      liste.append(inp, k);
+    } else {
+      f.antworten.forEach(function (x, i) {
+        var b = el("button", "bk-chip" + (x.bild ? " bild" : ""));
+        b.type = "button";
+        if (x.bild) {
+          b.append(miniBild(x.bild));
+          b.append(el("span", null, x.text || "Bild " + (i + 1)));
+          b.setAttribute("aria-label", x.text || "Bild " + (i + 1));
+        } else b.textContent = x.text;
+        if (vorab && t.v === i) b.classList.add("gewaehlt");
+        if (fertigJetzt && K.antwortRichtig(aufg, art, i)) b.classList.add("richtig");
+        else if (!fertigJetzt && (art === "vorher" ? (t.r && (t.vw === i || (t.vw === undefined && t.v === i))) : t.nw === i)) b.classList.add("falsch");
+        b.setAttribute("aria-pressed", b.classList.contains("gewaehlt") || b.classList.contains("richtig") ? "true" : "false");
+        b.addEventListener("click", function () { antworten(art, i); });
+        liste.append(b);
+      });
+    }
+    rueckZeigen(art);
+  }
+  function rueckZeigen(art, hinweis) {
+    var f = aufg[art], t = teilVon(aufg), r = $(art + "Rueck");
+    r.className = "bk-frage-rueck";
+    r.textContent = "";
+    function satz(kopf, rest) { if (kopf) r.append(el("strong", null, kopf + " ")); zeileFuellen(r, flach(rest || "")); }
+    if (hinweis) { satz("", hinweis); return; }
+    if (art === "vorher" && !t.r) {
+      if (t.v === undefined) satz("", f.typ === "zahl" ? "Schreiben Sie Ihre Vorhersage auf, dann «Start»." : "Wählen Sie eine Antwort, dann «Start».");
+      else satz("", "Ihre Vorhersage: «" + antwortName(f, t.v) + "». Drücken Sie jetzt «Start» und vergleichen Sie.");
+      return;
+    }
+    var ok = art === "vorher" ? t.vo : t.n;
+    if (ok) {
+      r.classList.add("ok");
+      satz(art === "vorher" && t.vf ? "Richtig vorhergesagt." : "Richtig.", f.erklaerung);
+      if (erledigt(aufg).g && art === (aufg.nachher ? "nachher" : "vorher")) {
+        var n = naechsteKnopf();
+        if (n) { r.append(el("br")); r.append(n); }
+      }
+      return;
+    }
+    if (art === "vorher") {
+      r.classList.add("fehler");
+      if (t.v === undefined) satz("Ohne Vorhersage gestartet.", "Was hat das Programm gemacht? Wählen Sie jetzt die passende Antwort.");
+      else if (t.vw === undefined) satz("Nicht ganz.", "Sie hatten «" + antwortName(f, t.v) + "» vorhergesagt. Vergleichen Sie mit dem Ergebnis und wählen Sie nochmals.");
+      else satz("Noch nicht.", "Schauen Sie sich das Programm und das Ergebnis nochmals Zeile für Zeile an.");
+      return;
+    }
+    if (t.nw === undefined) { r.hidden = false; satz("", f.typ === "zahl" ? "Geben Sie eine Zahl ein." : "Wählen Sie eine Antwort."); return; }
+    r.classList.add("fehler");
+    satz("Noch nicht.", f.typ === "zahl" ? "Rechnen Sie nochmals nach, am besten mit Ihrem Programm vor Augen." : "Schauen Sie sich Ihr Programm und die Zeichnung nochmals an.");
+  }
+  function antworten(art, wert) {
+    var f = aufg[art], t = teil(aufg);
+    if (f.typ === "zahl") {
+      wert = K.zahlText(wert);
+      if (wert === null) { rueckZeigen(art, "Geben Sie zuerst eine Zahl ein."); return; }
+    }
+    if (art === "vorher" && !t.r) {
+      t.v = wert;
+      speichern();
+      var m = $("pruefung");
+      if (!m.hidden && m.textContent.indexOf("Zuerst vorhersagen") === 0) m.hidden = true;
+      frageZeigen(art);
+      return;
+    }
+    if (art === "vorher" ? t.vo : t.n) return;
+    var ok = K.antwortRichtig(aufg, art, wert);
+    if (art === "vorher") { if (ok) { t.vo = 1; t.vk = wert; } else t.vw = wert; }
+    else { if (ok) t.n = 1; t.nw = wert; }
+    speichern();
+    abschliessen(aufg);
+    frageZeigen(art);
+    statusZeigen();
+  }
+
+  // Kleines Bild einer Antwort (Elemente wie bei «ziel»), Koordinaten wie in Turtle
+  var SVG = "http://www.w3.org/2000/svg";
+  function svgEl(tag, att) {
+    var e = document.createElementNS(SVG, tag);
+    Object.keys(att).forEach(function (k) { e.setAttribute(k, att[k]); });
+    return e;
+  }
+  function miniBild(ziel) {
+    var z = P.zerlegen(ziel), xs = [], ys = [];
+    z.strecken.forEach(function (q) { xs.push(q[0], q[2]); ys.push(q[1], q[3]); });
+    z.punkte.forEach(function (q) { var r = Math.max(3, (q[2] || 6) / 2); xs.push(q[0] - r, q[0] + r); ys.push(q[1] - r, q[1] + r); });
+    z.flaechen.forEach(function (fl) { fl.punkte.forEach(function (q) { xs.push(q[0]); ys.push(q[1]); }); });
+    if (!xs.length) { xs = [0]; ys = [0]; }
+    var x0 = Math.min.apply(null, xs), x1 = Math.max.apply(null, xs), y0 = Math.min.apply(null, ys), y1 = Math.max.apply(null, ys);
+    var h = Math.max(x1 - x0, y1 - y0, 20) / 2 * 1.15, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+    function f(x) { return Math.round(x * 10) / 10; }
+    var svg = svgEl("svg", { viewBox: [f(cx - h), f(-cy - h), f(2 * h), f(2 * h)].join(" "), "aria-hidden": "true" });
+    var g = svgEl("g", { transform: "scale(1,-1)", fill: "none", stroke: "currentColor", "stroke-width": f(h / 22), "stroke-linecap": "round", "stroke-linejoin": "round" });
+    z.flaechen.forEach(function (fl) {
+      g.append(svgEl("polygon", { points: fl.punkte.map(function (q) { return f(q[0]) + "," + f(q[1]); }).join(" "), fill: fl.farbe || "currentColor", stroke: "none", opacity: "0.8" }));
+    });
+    var gruppen = {};
+    z.strecken.forEach(function (q) { var k = q[4] || ""; (gruppen[k] || (gruppen[k] = [])).push("M" + f(q[0]) + " " + f(q[1]) + "L" + f(q[2]) + " " + f(q[3])); });
+    Object.keys(gruppen).forEach(function (k) { g.append(svgEl("path", k ? { d: gruppen[k].join(""), stroke: k } : { d: gruppen[k].join("") })); });
+    z.punkte.forEach(function (q) { g.append(svgEl("circle", { cx: f(q[0]), cy: f(q[1]), r: f(Math.max(3, (q[2] || 6) / 2)), fill: q[3] || "currentColor", stroke: "none" })); });
+    svg.append(g);
+    return svg;
+  }
+
+  /* ---------- Ideenkarten (Werkstatt) --------------------------- */
+
+  function ideenZeigen(a) {
+    var box = $("ideen"), liste = $("ideenListe");
+    liste.textContent = "";
+    box.hidden = !a.ideen;
+    (a.ideen || []).forEach(function (idee) {
+      var d = el("details", "tu-idee"), t = el("div", "tu-text");
+      d.append(el("summary", null, idee.titel));
+      textZeigen(t, idee.text);
+      d.append(t);
+      if (idee.startcode !== undefined) {
+        var b = el("button", "bk-knopf tu-klein", "Startcode dieser Idee übernehmen");
+        b.type = "button";
+        b.addEventListener("click", function () {
+          if (!confirm("Ihr Programm für diese Aufgabe durch den Startcode der Idee «" + idee.titel + "» ersetzen? Das lässt sich nicht rückgängig machen.")) return;
+          st.programme[aufg.id] = idee.startcode;
+          speichern();
+          A.programmLaden(idee.startcode, quelle(aufg));
+        });
+        d.append(b);
+      }
+      liste.append(d);
+    });
+  }
 
   /* ---------- Vorlage im Feld ---------------------------------- */
 
@@ -624,7 +878,7 @@
         var e = erledigt(a), li = el("li"), knopf = el("button", "tu-ue-aufgabe");
         knopf.type = "button";
         knopf.append(el("i", (a.kontrolle ? "k " : "") + (e.g ? "g" : e.s ? "s" : "")), (a.zusatz ? "★ " : "") + a.titel);
-        if (a.kontrolle) knopf.append(el("em", null, "Lernkontrolle"));
+        if (artName(a)) knopf.append(el("em", null, artName(a)));
         if (a === aufg) knopf.setAttribute("aria-current", "true");
         knopf.setAttribute("aria-label", a.titel + (e.g ? ", automatisch geprüft" : e.s ? ", selbst abgehakt" : ", offen"));
         knopf.addEventListener("click", function () { $("uebersichtDialog").close(); waehleAufgabe(a); });

@@ -108,7 +108,61 @@
   }
 
   var AUFGABE_FELDER = ["id", "titel", "abschnitt", "text", "fragen", "hinweise", "konzepte", "startcode", "weiterVon",
-    "vorhersage", "zusatz", "kontrolle", "bild", "ziel", "checkliste", "bedingungen"];
+    "vorhersage", "zusatz", "kontrolle", "bild", "ziel", "checkliste", "bedingungen", "art", "vorher", "nachher", "ideen"];
+  // Aufgabenart: Etikett in der Karte; «ausprobieren» ist nach dem ersten Start erledigt
+  var ARTEN = { ausprobieren: "Ausprobieren", vorhersagen: "Vorhersagen", nachbauen: "Nachbauen", ordnen: "Ordnen",
+    fehler: "Fehler finden", werkstatt: "Werkstatt", knobeln: "Knobeln" };
+  var SCHLUESSEL = /^[0-9a-f]{8}$/;
+
+  /* Schlüssel einer Antwort (wie frageSchluessel in Kara): So steht die richtige Antwort nicht
+     im Klartext in kurs.json. art: "vorher" oder "nachher"; wert: Nummer der Antwort (ab 0) oder
+     bei Zahl-Fragen die Zahl. */
+  function zahlText(v) {
+    var x = typeof v === "number" ? v : Number(String(v).trim().replace(",", ".").replace(/^\u2212/, "-"));
+    if (String(v).trim() === "" || !isFinite(x)) return null;
+    return String(parseFloat(x.toFixed(6)));
+  }
+  function frageSchluessel(id, art, wert) {
+    var s = "turtle:" + id + "/" + art + ":" + wert, h = 0x811c9dc5;
+    for (var k = 0; k < s.length; k++) { h ^= s.charCodeAt(k); h = Math.imul(h, 0x01000193) >>> 0; }
+    return ("0000000" + h.toString(16)).slice(-8);
+  }
+  // Ist die Antwort richtig? Auswahl: Nummer ab 0; Zahl: Text oder Zahl
+  function antwortRichtig(aufgabe, art, wert) {
+    var f = aufgabe[art];
+    if (!f) return false;
+    var w = f.typ === "zahl" ? zahlText(wert) : wert;
+    return w !== null && w !== undefined && f.richtig === frageSchluessel(aufgabe.id, art, w);
+  }
+
+  function fragePruefen(f, wo) {
+    if (f === undefined) return undefined;
+    if (!f || typeof f !== "object") throw Fehler(wo, "ist kein Objekt.");
+    var g = { text: text(f.text, wo + ", text", MAX.eintrag, true), erklaerung: text(f.erklaerung, wo + ", erklaerung", MAX.eintrag) };
+    if (typeof f.richtig !== "string" || !SCHLUESSEL.test(f.richtig)) throw Fehler(wo, "«richtig» ist ein Schlüssel aus dem Werkzeug (?werkzeug=frage), 8 Zeichen 0–9 und a–f.");
+    g.richtig = f.richtig;
+    if (f.typ === "zahl") { g.typ = "zahl"; return g; }
+    if (f.typ !== undefined) throw Fehler(wo, "«typ» ist «zahl» oder fehlt (Auswahl).");
+    if (!Array.isArray(f.antworten) || f.antworten.length < 2 || f.antworten.length > 8) throw Fehler(wo, "«antworten» braucht 2 bis 8 Antworten.");
+    g.antworten = f.antworten.map(function (x, i) {
+      var w = wo + ", Antwort " + (i + 1);
+      if (typeof x === "string") return { text: text(x, w, MAX.eintrag, true) };
+      if (!x || typeof x !== "object" || x.bild === undefined) throw Fehler(w, "ist ein Text oder {\"bild\": {\"elemente\": […]}}.");
+      return { bild: zielPruefen(x.bild, w), text: text(x.text, w + ", text", MAX.titel) };
+    });
+    return g;
+  }
+
+  function ideenPruefen(v, wo) {
+    if (v === undefined) return undefined;
+    if (!Array.isArray(v) || !v.length || v.length > 12) throw Fehler(wo, "«ideen» ist eine Liste mit 1 bis 12 Ideen.");
+    return v.map(function (x, i) {
+      var w = wo + ", Idee " + (i + 1);
+      if (!x || typeof x !== "object") throw Fehler(w, "ist kein Objekt.");
+      return { titel: text(x.titel, w + ", titel", MAX.titel, true), text: text(x.text, w + ", text", MAX.text, true),
+        startcode: text(x.startcode, w + ", startcode", MAX.code) };
+    });
+  }
 
   function aufgabePruefen(a, wo, warnungen) {
     if (!a || typeof a !== "object") throw Fehler(wo, "ist kein Objekt.");
@@ -125,8 +179,17 @@
       vorhersage: janein(a.vorhersage, wo + ", vorhersage"),
       zusatz: janein(a.zusatz, wo + ", zusatz"),
       kontrolle: janein(a.kontrolle, wo + ", kontrolle"),
-      ziel: zielPruefen(a.ziel, wo)
+      ziel: zielPruefen(a.ziel, wo),
+      vorher: fragePruefen(a.vorher, wo + ", vorher"),
+      nachher: fragePruefen(a.nachher, wo + ", nachher"),
+      ideen: ideenPruefen(a.ideen, wo)
     };
+    if (a.art !== undefined) {
+      if (!Object.prototype.hasOwnProperty.call(ARTEN, a.art)) throw Fehler(wo, "«art» ist eine von: " + Object.keys(ARTEN).join(", ") + ".");
+      b.art = a.art;
+    }
+    if (b.vorher && b.vorhersage) warnungen.push(wo + ": «vorher» und «vorhersage» zusammen; «vorhersage» wird übergangen.");
+    if (b.vorher) b.vorhersage = false;
     b.titel = b.titel.trim();
     if (a.konzepte !== undefined) {
       if (!Array.isArray(a.konzepte) || a.konzepte.length > 12) throw Fehler(wo, "«konzepte» ist eine Liste von Konzept-ids.");
@@ -248,7 +311,8 @@
     return teile;
   }
 
-  var api = { adresse: adresse, pruefe: pruefe, bloecke: bloecke, FORMAT: FORMAT };
+  var api = { adresse: adresse, pruefe: pruefe, bloecke: bloecke, FORMAT: FORMAT, ARTEN: ARTEN,
+    frageSchluessel: frageSchluessel, antwortRichtig: antwortRichtig, zahlText: zahlText };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else global.TurtleKurs = api;
 })(this);

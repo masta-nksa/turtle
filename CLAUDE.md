@@ -48,10 +48,11 @@ Turbo, am Ende und nach Änderung), Tempo während des Laufs umstellen, Endlossc
 `input()`, Fehlerzeile, Neuladen (Programm und Tempo bleiben), Teilen-Link in zweitem Kontext,
 kaputter Link, Kursmodus (Server im Ordner über `turtle/` und `turtle-aufgaben/`, z. B. ein
 Scratchpad-Ordner mit Symlinks auf beide Repos; Lernpfad, Weiter/Zurück, Übersicht, Einklappen,
-Vorhersage mit «Ohne Vorhersage starten», Freigabe weich und mit `freigabe`, Prüfung,
+Vorhersage mit «Ohne Vorhersage starten», Fragen `vorher`/`nachher` (Bild, Text, Zahl; falsch, dann richtig;
+Neuladen), Ideenkarten, `?werkzeug=frage`, Freigabe weich und mit `freigabe`, Prüfung,
 Selbst-Abhaken, `weiterVon`, Neuladen, kaputter oder fehlender Kurs, Kurs offline), Spiel mit `onkey`/`ontimer` (Tasten ohne Klick,
 Pause), Doku (alle Beispiele im Tool ausführen, Suche mit node über `befehle.js`, Sprung aus
-Kurzhilfe und Fehlerhilfe, Esc vor Vollbild), `pruefung.js` und `kurs.js` direkt mit node, Handy-Breite (kein horizontales Scrollen), Hell/Dunkel, Zoom beim Verlassen des
+Kurzhilfe und Fehlerhilfe, Esc vor Vollbild), `pruefung.js` und `kurs.js` direkt mit node, Handy-Breite (kein horizontales Scrollen), Hell/Dunkel, Einrückungslinien im Editor, Zoom beim Verlassen des
 Feldes, Koordinatensystem, Zeiger-Koordinaten (gezoomt mit `onscreenclick` vergleichen), Vollbild Programm/Feld
 (Desktop, iPad quer/hoch, Handy: Feld ganz sichtbar, kein Scrollen der Seite), Fehlermeldungen (`fehlerhilfe.js` direkt mit node prüfen), offline
 (`context.setOffline(true)`: Seite offen ohne Service Worker, und mit Service Worker neu laden).

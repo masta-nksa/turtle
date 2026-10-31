@@ -299,6 +299,7 @@ body[data-vollbild] .tu-kurs{display:none}
   font:700 .72rem/1 "IBM Plex Sans",sans-serif;color:var(--surface);
 }
 .bk-station.kontrolle{border-radius:5px}
+.bk-station.werkstatt{width:30px;height:30px;border-width:3px}
 .bk-station.geprueft{background:var(--ok);border-color:var(--ok)}
 .bk-station.selbst{background:var(--ink-soft);border-color:var(--ink-soft);opacity:.75}
 .bk-station.aktuell{box-shadow:0 0 0 3px var(--surface),0 0 0 5px var(--accent)}
@@ -346,6 +347,50 @@ body[data-vollbild] .tu-kurs{display:none}
 .tu-vergleich{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;min-height:36px;font-size:.88rem;color:var(--ink-soft)}
 .tu-vergleich .bk-knopf[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
 .tu-knoepfe{display:flex;flex-wrap:wrap;gap:8px}
+
+/* Fragen vorher und nachher (wie .bk-frage in Kara, baukasten.css) */
+.bk-frage{margin:10px 0 0;border:1px solid var(--line);border-radius:var(--radius);padding:4px 12px 10px;min-width:0;background:var(--surface)}
+.bk-frage[hidden]{display:none}
+.bk-frage legend{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);font-weight:600;padding:0 6px}
+.bk-frage .bk-frage-text{font-weight:600;margin:0}
+.bk-frage-text code,.bk-frage-rueck code{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.88em;padding:0 3px;background:var(--ground);border:1px solid var(--line);border-radius:3px}
+.bk-frage-antworten{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 4px}
+.bk-chip{font:inherit;font-size:.86rem;line-height:1.35;text-align:left;cursor:pointer;padding:6px 12px;min-height:36px;border-radius:18px;border:1px solid var(--line);background:var(--surface);color:var(--ink);max-width:100%}
+.bk-chip:hover{border-color:var(--accent)}
+.bk-chip:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.bk-chip.gewaehlt{border-color:var(--accent);background:var(--accent-soft);font-weight:600}
+.bk-chip.richtig{border-color:var(--ok);background:var(--ok-soft);font-weight:600}
+.bk-chip.falsch{border-color:var(--no);background:var(--no-soft)}
+.bk-chip.bild{display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px;border-radius:var(--radius);text-align:center}
+.bk-chip.bild svg{width:84px;height:84px;display:block;color:var(--ink)}
+.bk-chip.bild span{font-size:.78rem}
+.bk-zahl{font:inherit;width:6.5em;min-height:36px;padding:4px 8px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);color:var(--ink)}
+.bk-zahl:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.bk-frage .bk-knopf{min-height:36px;padding:4px 12px}
+.bk-frage .bk-frage-rueck{margin:8px 0 0;padding:8px 10px;border-radius:var(--radius);background:var(--ground);min-height:1.5em}
+.bk-frage-rueck[hidden]{display:none}
+.bk-frage-rueck.ok{background:var(--ok-soft)}
+.bk-frage-rueck.fehler{background:var(--no-soft)}
+.bk-frage-rueck .bk-knopf{margin-top:8px}
+
+/* Ideenkarten (Werkstatt) */
+.tu-ideen{margin-top:10px}
+.tu-ideen[hidden]{display:none}
+.tu-ideen-titel{margin:0 0 6px !important;font-size:.85rem;color:var(--ink-soft)}
+.tu-ideen-liste{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr));gap:8px;align-items:start}
+.tu-idee{border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:var(--radius);background:var(--surface);padding:6px 10px}
+.tu-idee summary{cursor:pointer;font-weight:600;font-size:.92rem;min-height:28px;display:flex;align-items:center}
+.tu-idee summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.tu-idee .tu-text{margin:6px 0 4px;font-size:.9rem}
+.tu-etikett.art{border-color:var(--ink-soft);color:var(--ink)}
+
+/* Fragen-Werkzeug (?werkzeug=frage) */
+.tu-fw{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;font-size:.88rem}
+.tu-fw input[type="text"],.tu-fw select{font:inherit;min-height:32px;padding:2px 6px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);color:var(--ink)}
+.tu-fw-aus code{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:1rem;user-select:all}
+
+/* Einrückungslinien im Editor: je Stufe ein feiner Strich am Anfang */
+.tu-editor .cm-einzug{box-shadow:inset 1px 0 0 var(--einzug,var(--line))}
 
 /* ---------- Übersicht ---------- */
 .tu-uebersicht{width:min(94vw,1000px);max-height:88vh;max-height:88dvh;padding:0;overflow:auto}

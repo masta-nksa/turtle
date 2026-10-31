@@ -42,7 +42,7 @@
         <span><i class="g"></i>automatisch geprüft</span>
         <span><i class="s"></i>selbst abgehakt</span>
         <span><i class="a"></i>aktuelle Aufgabe</span>
-        <span><i class="k"></i>Lernkontrolle</span>
+        <span><i class="k"></i>Selbstkontrolle</span>
         <span>★ Zusatzaufgabe</span>
       </div>
     </section>
@@ -67,6 +67,10 @@
         <div class="tu-vergleich" id="vergleich" role="group" aria-label="Stimmte Ihre Vorhersage?"></div>
       </div>
       <ul class="tu-checkliste" id="checkliste" hidden></ul>
+      <div class="tu-ideen" id="ideen" hidden>
+        <p class="tu-ideen-titel">Ideenkarten: wenn Sie nicht weiterwissen</p>
+        <div class="tu-ideen-liste" id="ideenListe"></div>
+      </div>
       <img class="tu-bild" id="aufgabeBild" alt="" hidden>
       <p class="tu-weiter" id="weiterHinweis" hidden></p>
       <details class="bk-hinweis" id="hinweisBox">
@@ -156,7 +160,30 @@
         <p class="bk-schritt" id="zustand" aria-live="polite"></p>
 
         <div class="bk-meldung fehler" id="meldung" role="alert" hidden></div>
+        <fieldset class="bk-frage" id="vorherBox" hidden>
+          <legend>Vorher: Ihre Vorhersage</legend>
+          <p class="bk-frage-text" id="vorherText"></p>
+          <div class="bk-frage-antworten" id="vorherAntworten"></div>
+          <p class="bk-frage-rueck" id="vorherRueck" role="status" aria-live="polite"></p>
+        </fieldset>
         <div class="bk-meldung" id="pruefung" role="status" aria-live="polite" hidden></div>
+        <fieldset class="bk-frage" id="nachherBox" hidden>
+          <legend>Nachher: Frage zum Programm</legend>
+          <p class="bk-frage-text" id="nachherText"></p>
+          <div class="bk-frage-antworten" id="nachherAntworten"></div>
+          <p class="bk-frage-rueck" id="nachherRueck" role="status" aria-live="polite"></p>
+        </fieldset>
+        <div class="bk-meldung" id="frageWerkzeug" hidden>
+          <strong>Fragen-Werkzeug</strong>
+          <p>Schlüssel für «richtig» bei «vorher» und «nachher» in kurs.json.</p>
+          <div class="tu-fw">
+            <label>Aufgabe (id) <input type="text" id="fwId" autocomplete="off" spellcheck="false"></label>
+            <label>Frage <select id="fwArt"><option value="vorher">vorher</option><option value="nachher">nachher</option></select></label>
+            <label>Richtige Antwort <input type="text" id="fwWert" autocomplete="off" spellcheck="false" placeholder="Nummer (1, 2 …) oder Zahl"></label>
+            <label><input type="checkbox" id="fwZahl"> Zahl-Frage</label>
+          </div>
+          <p class="tu-fw-aus">«richtig»: <code id="fwAus">–</code></p>
+        </div>
         <div class="bk-meldung" id="zielWerkzeug" hidden>
           <strong>Zielbild-Werkzeug</strong>
           <p>Nach jedem Lauf steht hier die Zeichnung als «ziel» für kurs.json.</p>

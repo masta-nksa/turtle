@@ -92,14 +92,47 @@
       "Cmd-Enter": function () { neuStarten(); }
     }
   });
-  // Einrückungslinien: führende Leerzeichen je 4 als «einzug» (feiner Strich am Anfang, turtle.css)
-  editor.addOverlay({
-    token: function (s) {
-      if (/^ *$/.test(s.string.slice(0, s.pos)) && s.match("    ")) return "einzug";
-      s.skipToEnd();
-      return null;
+  // Einrückungslinien: Zeilenklassen tu-ez-N (N Striche bei Spalte 4, 8, …) und tu-ek-K (kräftiger
+  // Strich des Blocks am Cursor), gezeichnet als Hintergrund in turtle.css. Leerzeilen erben die
+  // kleinere Stufe ihrer Nachbarn, damit der Block durchgehend bleibt.
+  var EZ_MAX = 16;
+  function einzugStufen() {
+    var n = editor.lineCount(), ind = [], i, s;
+    for (i = 0; i < n; i++) {
+      s = editor.getLine(i);
+      ind.push(/^\s*$/.test(s) ? -1
+        : Math.min(EZ_MAX, Math.floor(CodeMirror.countColumn(/^\s*/.exec(s)[0], null, 4) / 4)));
     }
-  });
+    var vor = [], nach = [], p = 0;
+    for (i = 0; i < n; i++) { if (ind[i] >= 0) p = ind[i]; vor[i] = p; }
+    p = 0;
+    for (i = n - 1; i >= 0; i--) { if (ind[i] >= 0) p = ind[i]; nach[i] = p; }
+    return ind.map(function (e, j) { return e >= 0 ? e : Math.min(vor[j], nach[j]); });
+  }
+  function einzugAktualisieren() {
+    var stufen = einzugStufen(), n = stufen.length, z = editor.getCursor().line;
+    var k = stufen[z], von = z, bis = z;
+    if (/:\s*(#.*)?$/.test(editor.getLine(z))) {          // Kopfzeile: Block darunter hervorheben
+      for (var j = z + 1; j < n && /^\s*$/.test(editor.getLine(j)); j++);
+      if (j < n && stufen[j] > k) { k = stufen[j]; von = bis = z + 1; }
+    }
+    if (k >= 1) {
+      while (von > 0 && stufen[von - 1] >= k) von--;
+      while (bis < n - 1 && stufen[bis + 1] >= k) bis++;
+    }
+    editor.operation(function () {
+      for (var i = 0; i < n; i++) {
+        var soll = stufen[i] ? "tu-ez tu-ez-" + stufen[i] +
+          (k >= 1 && i >= von && i <= bis && stufen[i] >= k ? " tu-ek tu-ek-" + k : "") : "";
+        if ((editor.lineInfo(i).textClass || "") === soll) continue;
+        editor.removeLineClass(i, "text");
+        if (soll) editor.addLineClass(i, "text", soll);
+      }
+    });
+  }
+  editor.on("changes", einzugAktualisieren);
+  editor.on("cursorActivity", einzugAktualisieren);
+  einzugAktualisieren();
   ["autocapitalize", "autocorrect"].forEach(function (a) { editor.getInputField().setAttribute(a, "off"); });
   editor.getInputField().setAttribute("spellcheck", "false");
 

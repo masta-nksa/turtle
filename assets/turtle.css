@@ -397,8 +397,32 @@ body[data-vollbild] .tu-kurs{display:none}
 .tu-fw input[type="text"],.tu-fw select{font:inherit;min-height:32px;padding:2px 6px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);color:var(--ink)}
 .tu-fw-aus code{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:1rem;user-select:all}
 
-/* Einrückungslinien im Editor: je Stufe ein feiner Strich am Anfang */
-.tu-editor .cm-einzug{box-shadow:inset 1px 0 0 var(--einzug,var(--line))}
+/* Einrückungslinien im Editor: Striche bei Spalte 4, 8, … (app.js setzt tu-ez-N / tu-ek-K).
+   Hintergrund in ch-Einheiten: folgt Schriftgrösse und Umbruch von selbst. */
+.tu-editor{--einzug:color-mix(in srgb,var(--ink-soft) 32%,var(--surface));--einzug-aktiv:color-mix(in srgb,var(--accent) 80%,var(--surface))}
+.tu-editor pre.tu-ez{
+  background-repeat:no-repeat;background-origin:content-box;
+  background-image:linear-gradient(var(--einzug-aktiv),var(--einzug-aktiv)),repeating-linear-gradient(to right,var(--einzug) 0 1px,transparent 1px 4ch);
+  background-size:0 100%,calc(var(--ez-n,0) * 4ch) 100%;
+  background-position:calc(var(--ek,0) * 4ch) 0,4ch 0;
+}
+.tu-editor pre.tu-ek{background-size:1px 100%,calc(var(--ez-n,0) * 4ch) 100%}
+.tu-ez-1{--ez-n:1}.tu-ek-1{--ek:1}
+.tu-ez-2{--ez-n:2}.tu-ek-2{--ek:2}
+.tu-ez-3{--ez-n:3}.tu-ek-3{--ek:3}
+.tu-ez-4{--ez-n:4}.tu-ek-4{--ek:4}
+.tu-ez-5{--ez-n:5}.tu-ek-5{--ek:5}
+.tu-ez-6{--ez-n:6}.tu-ek-6{--ek:6}
+.tu-ez-7{--ez-n:7}.tu-ek-7{--ek:7}
+.tu-ez-8{--ez-n:8}.tu-ek-8{--ek:8}
+.tu-ez-9{--ez-n:9}.tu-ek-9{--ek:9}
+.tu-ez-10{--ez-n:10}.tu-ek-10{--ek:10}
+.tu-ez-11{--ez-n:11}.tu-ek-11{--ek:11}
+.tu-ez-12{--ez-n:12}.tu-ek-12{--ek:12}
+.tu-ez-13{--ez-n:13}.tu-ek-13{--ek:13}
+.tu-ez-14{--ez-n:14}.tu-ek-14{--ek:14}
+.tu-ez-15{--ez-n:15}.tu-ek-15{--ek:15}
+.tu-ez-16{--ez-n:16}.tu-ek-16{--ek:16}
 
 /* ---------- Übersicht ---------- */
 .tu-uebersicht{width:min(94vw,1000px);max-height:88vh;max-height:88dvh;padding:0;overflow:auto}

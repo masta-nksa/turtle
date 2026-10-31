@@ -309,8 +309,8 @@ Antwort (Nummer ab 1 oder, mit «Zahl-Frage», die Zahl). Daneben steht der Schl
 
 ## Editor: Einrückungslinien
 
-Führende Leerzeichen zeigt der Editor je Stufe (4 Leerzeichen) mit einem feinen senkrechten Strich
-(`addOverlay` in `app.js`, Klasse `cm-einzug` in `turtle.css`). Das hilft beim Einrücken von
+Führende Leerzeichen zeigt der Editor je Stufe (4 Leerzeichen) mit einem feinen senkrechten Strich bei Spalte 4, 8, 12 …, durchgehend auch über Leerzeilen; der Strich des Blocks am Cursor ist kräftiger
+(Zeilenklassen `tu-ez-N`/`tu-ek-K` aus `app.js`, Hintergrund in `turtle.css`). Das hilft beim Einrücken von
 Schleifen, Verzweigungen und eigenen Befehlen.
 
 ## Speichern und Teilen
